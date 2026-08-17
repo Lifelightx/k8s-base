@@ -30,15 +30,38 @@ spec:
             - name: MONGO_URI
               value: "mongodb://mongodb:27017/todoapp"
 
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            faliureThreshold: 30
+            periodSeconds: 5
+
           readinessProbe:
             httpGet:
               path: /api/health
               port: 5000
+            periodSeconds: 5
+            timeoutSeconds: 2
+            faliureThreshold: 3
           
           livenessProbe:
             httpGet:
               path: /api/health
               port: 5000
+            periodSeconds: 5
+            timeoutSeconds: 2
+            faliureThreshold: 3
+          
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+
               
             
 

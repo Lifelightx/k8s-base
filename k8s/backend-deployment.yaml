@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: backend 
-          image: k8s-todo-backend:latest
+          image: k8s-todo-backend:v1
           imagePullPolicy: IfNotPresent
 
           ports:
@@ -34,7 +34,7 @@ spec:
             httpGet:
               path: /api/health
               port: 5000
-            faliureThreshold: 30
+            failureThreshold: 30
             periodSeconds: 5
 
           readinessProbe:
@@ -43,7 +43,7 @@ spec:
               port: 5000
             periodSeconds: 5
             timeoutSeconds: 2
-            faliureThreshold: 3
+            failureThreshold: 3
           
           livenessProbe:
             httpGet:
@@ -51,7 +51,7 @@ spec:
               port: 5000
             periodSeconds: 5
             timeoutSeconds: 2
-            faliureThreshold: 3
+            failureThreshold: 3
           
           resources:
             requests:

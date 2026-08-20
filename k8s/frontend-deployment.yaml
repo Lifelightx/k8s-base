@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: k8s-todo-frontend:latest
+          image: k8s-todo-frontend:v2
           imagePullPolicy: IfNotPresent
 
           ports:

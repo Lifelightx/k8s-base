@@ -6,6 +6,8 @@ const connectDB = require('./src/config/db');
 const todoRoutes = require('./src/routes/todos');
 const errorHandler = require('./src/middleware/errorHandler');
 const logger = require('./src/utils/logger');
+const crypto = require("crypto");
+const os = require("os");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,9 +36,27 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get("/api/crash", (req, res) => {
-  console.log("Intentional crash requested");
+  console.log("Intentional crash request", {
+    pod: os.hostname(),
+  })
 
-  process.exit(1);
+  console.log("CRASH REQUEST", {
+    pod: os.hostname(),
+    method: req.method,
+    url: req.originalUrl,
+    userAgent: req.headers["user-agent"],
+    forwardedFor: req.headers["x-forwarded-for"],
+  });
+
+  res.status(200).json({
+    message: "This pod will crash",
+    pod: os.hostname()
+  })
+
+  setTimeout(()=>{
+    process.exit(1);
+  }, 100)
+  
 });
 
 // Error handler

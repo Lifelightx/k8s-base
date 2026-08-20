@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: backend 
-          image: k8s-todo-backend:v1
+          image: k8s-todo-backend:v5
           imagePullPolicy: IfNotPresent
 
           ports:

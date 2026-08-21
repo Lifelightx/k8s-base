@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Todo = require('../models/Todo');
 const logger = require('../utils/logger');
+const axios = require("axios")
+const LLM_SERVICE_URL = process.env.LLM_SERVICE_URL || "http://localhost:5001";
 
 // GET all todos (with optional filter/sort)
 router.get('/', async (req, res, next) => {
@@ -46,7 +48,21 @@ router.get('/stats', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const { text, priority = 'medium' } = req.body;
-    const todo = await Todo.create({ text, priority });
+    let description = ""
+    const llmRs = await axios.post(`${LLM_SERVICE_URL}/generate`,
+      {title: text},
+      {timeout: 10000}
+    )
+    if (llmRs.status !== 200){
+      logger.error(`Failed to fetch details from LLM service: status=${llmRs.status}`)
+      res.status(500).json({message: "Failed to fetch details from LLM service"})
+      return;
+    }
+
+    description = llmRs.data.description || ""
+      
+
+    const todo = await Todo.create({ text, description, priority });
     logger.info(`Todo created: id=${todo._id} text="${todo.text}" priority=${todo.priority}`);
     res.status(201).json(todo);
   } catch (err) {

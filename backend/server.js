@@ -8,7 +8,7 @@ const errorHandler = require('./src/middleware/errorHandler');
 const logger = require('./src/utils/logger');
 const crypto = require("crypto");
 const os = require("os");
-
+const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 5000;
 

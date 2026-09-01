@@ -1,11 +1,16 @@
+# pyrefly: ignore [missing-import]
 from httpx import _status_codes
 import os
-
+# pyrefly: ignore [missing-import]
+from dotenv import load_dotenv 
+# pyrefly: ignore [missing-import]
 import httpx
+# pyrefly: ignore [missing-import]
 from fastapi import FastAPI, HTTPException
 
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel
-
+load_dotenv()
 app = FastAPI(title="AI Todo List", version="1.0.0")
 
 LLM_MODEL = os.getenv("LLM_MODEL")
@@ -22,8 +27,8 @@ def health_check():
 
 @app.post("/generate")
 async def generate_description(todo: TodoRequest):
-    prompt = f"Generate a concise, 2-sentence actionable description for the todo task: {todo.title}, Respond with only the description in string format. "
-
+    prompt = f"Generate a concise, 2-sentence actionable description for the todo task: {todo.title}, Respond with only the description in string format and dont add quotes. "
+    print(OLLAMA_HOST)
     try:
         async with httpx.AsyncClient(timeout=None) as client:
             response = await client.post(

@@ -8,120 +8,97 @@ function timeAgo(d) {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
-const Check = () => (
-  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
-const Pencil = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-  </svg>
-);
-const Trash = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-    <path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
-  </svg>
-);
-const Save = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
+const P_COLORS = {
+  high:   { bg: 'rgba(224,82,82,0.12)',   border: '#e05252', text: '#e05252', label: 'High' },
+  medium: { bg: 'rgba(217,119,6,0.12)',   border: '#d97706', text: '#d97706', label: 'Medium' },
+  low:    { bg: 'rgba(46,204,113,0.12)',   border: '#2ecc71', text: '#2ecc71', label: 'Low' },
+};
 
-const P_CLASS = { high: 'ph', medium: 'pm', low: 'pl' };
-
-export default function TodoItem({ todo, onToggle, onDelete, onUpdate }) {
-  const [editing, setEditing] = useState(false);
-  const [editText, setEditText] = useState(todo.text);
-  const [editP, setEditP] = useState(todo.priority || 'medium');
+export default function TodoItem({ todo, onToggle, onDelete, onClick }) {
   const [leaving, setLeaving] = useState(false);
-  const inputRef = useRef(null);
+  const p = todo.priority || 'medium';
+  const pc = P_COLORS[p];
 
-  useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
-
-  const startEdit = () => { setEditText(todo.text); setEditP(todo.priority || 'medium'); setEditing(true); };
-  const cancelEdit = () => setEditing(false);
-  const saveEdit = async () => {
-    const t = editText.trim();
-    if (!t) return;
-    await onUpdate(todo._id, { text: t, priority: editP });
-    setEditing(false);
-  };
-
-  const handleDelete = () => {
+  const handleDelete = (e) => {
+    e.stopPropagation();
     setLeaving(true);
     setTimeout(() => onDelete(todo._id), 250);
   };
 
-  const p = todo.priority || 'medium';
+  const handleToggle = (e) => {
+    e.stopPropagation();
+    onToggle(todo._id);
+  };
 
   return (
     <div
-      className={`task-item${todo.completed ? ' is-done' : ''} ${P_CLASS[p]}${leaving ? ' leaving' : ''}`}
-      style={leaving ? { opacity: 0, transform: 'translateX(12px)', transition: 'all 0.25s ease' } : {}}
+      className={`task-card${todo.completed ? ' is-done' : ''}${leaving ? ' leaving' : ''}`}
+      style={{
+        '--p-border': pc.border,
+        '--p-bg': pc.bg,
+        opacity: leaving ? 0 : 1,
+        transform: leaving ? 'scale(0.95)' : 'scale(1)',
+        transition: 'opacity 0.25s ease, transform 0.25s ease',
+        cursor: 'pointer',
+      }}
+      onClick={() => onClick(todo)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onClick(todo)}
     >
-      {/* Checkbox */}
-      <div
-        id={`chk-${todo._id}`}
-        className={`task-check${todo.completed ? ' done' : ''}`}
-        role="checkbox"
-        aria-checked={todo.completed}
-        tabIndex={0}
-        onClick={() => onToggle(todo._id)}
-        onKeyDown={(e) => e.key === 'Enter' && onToggle(todo._id)}
-        title={todo.completed ? 'Mark active' : 'Mark done'}
-      >
-        {todo.completed && <Check />}
+      {/* Priority top strip */}
+      <div className="task-card-strip" style={{ background: pc.border }} />
+
+      {/* Header row */}
+      <div className="task-card-header">
+        <div
+          className={`task-check${todo.completed ? ' done' : ''}`}
+          role="checkbox"
+          aria-checked={todo.completed}
+          tabIndex={0}
+          onClick={handleToggle}
+          onKeyDown={(e) => e.key === 'Enter' && handleToggle(e)}
+          title={todo.completed ? 'Mark active' : 'Mark done'}
+        >
+          {todo.completed && (
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+        </div>
+
+        <button
+          className="icon-btn red task-card-delete"
+          onClick={handleDelete}
+          aria-label="Delete"
+          title="Delete"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            <path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
+          </svg>
+        </button>
       </div>
 
-      {/* Content */}
-      <div className="task-body">
-        {editing ? (
-          <>
-            <input
-              ref={inputRef}
-              className="edit-input"
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }}
-              maxLength={200}
-            />
-            <div className="edit-controls">
-              {['high', 'medium', 'low'].map((pr) => (
-                <button key={pr} type="button"
-                  className={`p-chip${editP === pr ? ` sel-${pr}` : ''}`}
-                  onClick={() => setEditP(pr)}>
-                  {pr.charAt(0).toUpperCase() + pr.slice(1)}
-                </button>
-              ))}
-              <span style={{ marginLeft: 'auto', display: 'flex', gap: '0.25rem' }}>
-                <button className="icon-btn green" onClick={saveEdit} title="Save (Enter)"><Save /></button>
-                <button className="btn btn-ghost" onClick={cancelEdit} style={{ padding: '3px 8px', fontSize: '0.75rem' }}>Cancel</button>
-              </span>
-            </div>
-          </>
-        ) : (
-          <>
-            <span className="task-text">{todo.text}</span>
-            <div className="task-desc">{todo.description}</div>
-            <div className="task-meta-row">
-              <span className="task-time">{timeAgo(todo.createdAt)}</span>
-              <span className={`p-badge ${p}`}>{p}</span>
-            </div>
-          </>
+      {/* Body */}
+      <div className="task-card-body">
+        <p className="task-card-title">{todo.text}</p>
+        {todo.description && (
+          <p className="task-card-desc">{todo.description}</p>
         )}
       </div>
 
-      {/* Actions */}
-      {!editing && (
-        <div className="task-actions">
-          <button id={`edit-${todo._id}`} className="icon-btn" onClick={startEdit} aria-label="Edit"><Pencil /></button>
-          <button id={`del-${todo._id}`} className="icon-btn red" onClick={handleDelete} aria-label="Delete"><Trash /></button>
-        </div>
-      )}
+      {/* Footer */}
+      <div className="task-card-footer">
+        <span className="task-time">{timeAgo(todo.createdAt)}</span>
+        <span
+          className="task-card-priority"
+          style={{ background: pc.bg, color: pc.text, border: `1px solid ${pc.border}` }}
+        >
+          {pc.label}
+        </span>
+      </div>
     </div>
   );
 }

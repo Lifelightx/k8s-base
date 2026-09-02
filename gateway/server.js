@@ -34,12 +34,10 @@ app.use(createProxyMiddleware({
 }));
 
 // LLM Service Proxy
-app.use('/api/llm', createProxyMiddleware({
+app.use(createProxyMiddleware({
     target: SERVICES.llm,
     changeOrigin: true,
-    pathRewrite: {
-        '^/api/llm': '', // remove base path
-    },
+    pathFilter: "/api/ai"
 }));
 
 // Health check endpoint

@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
-import ComposeTodo    from './components/ComposeTodo';
-import TodoList       from './components/TodoList';
-import ToastContainer from './components/ToastContainer';
-import LandingPage    from './components/LandingPage';
-import LoginPage      from './components/LoginPage';
-import SignupPage     from './components/SignupPage';
+import ComposeTodo      from './components/ComposeTodo';
+import TodoList         from './components/TodoList';
+import ToastContainer   from './components/ToastContainer';
+import LandingPage      from './components/LandingPage';
+import LoginPage        from './components/LoginPage';
+import SignupPage       from './components/SignupPage';
+import ProfilePage      from './components/ProfilePage';
+import TaskDetailsPage  from './components/TaskDetailsPage';
 import {
   fetchTodos, fetchStats, createTodo,
   toggleTodo, deleteTodo, updateTodo, clearCompleted,
@@ -27,12 +29,13 @@ function greeting() {
 }
 
 // ── Pages ──
-const PAGES = { landing: 'landing', login: 'login', signup: 'signup', app: 'app' };
+const PAGES = { landing: 'landing', login: 'login', signup: 'signup', app: 'app', profile: 'profile', taskDetail: 'taskDetail' };
 
 export default function App() {
-  const [page,    setPage]    = useState(PAGES.landing);
-  const [user,    setUser]    = useState(null);
-  const [authChk, setAuthChk] = useState(true); // checking session on mount
+  const [page,         setPage]        = useState(PAGES.landing);
+  const [user,         setUser]        = useState(null);
+  const [authChk,      setAuthChk]     = useState(true);
+  const [selectedTodo, setSelectedTodo] = useState(null);
 
   const [todos,   setTodos]   = useState([]);
   const [loading, setLoading] = useState(true);
@@ -207,6 +210,35 @@ export default function App() {
     );
   }
 
+  if (page === PAGES.profile) {
+    return (
+      <>
+        <ProfilePage
+          onBack={() => setPage(PAGES.app)}
+          onLogout={handleLogout}
+          stats={stats}
+        />
+        <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      </>
+    );
+  }
+
+  if (page === PAGES.taskDetail && selectedTodo) {
+    return (
+      <>
+        <TaskDetailsPage
+          todo={selectedTodo}
+          onBack={() => { setSelectedTodo(null); setPage(PAGES.app); }}
+          onUpdate={async (id, payload) => { await handleUpdate(id, payload); setSelectedTodo((t) => ({ ...t, ...payload })); }}
+          onToggle={handleToggle}
+          onDelete={handleDelete}
+          toast={toast}
+        />
+        <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      </>
+    );
+  }
+
   /* ── Notes App ── */
   return (
     <div className="app">
@@ -220,6 +252,14 @@ export default function App() {
               <span className={`status-dot${online ? '' : ' offline'}`} />
               {online ? 'Synced' : 'Offline'}
             </div>
+            <button
+              className="btn btn-ghost"
+              onClick={() => setPage(PAGES.profile)}
+              title="Profile"
+              style={{ padding: '0.4rem 0.6rem', marginLeft: '0.5rem' }}
+            >
+              Profile
+            </button>
             <button
               id="btn-logout"
               className="btn-logout"
@@ -306,7 +346,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* List */}
+      {/* Grid */}
       <TodoList
         todos={filtered}
         loading={loading}
@@ -314,6 +354,7 @@ export default function App() {
         onToggle={handleToggle}
         onDelete={handleDelete}
         onUpdate={handleUpdate}
+        onTaskClick={(todo) => { setSelectedTodo(todo); setPage(PAGES.taskDetail); }}
       />
 
       {/* Footer */}

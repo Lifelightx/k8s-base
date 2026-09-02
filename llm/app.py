@@ -6,12 +6,14 @@ from dotenv import load_dotenv
 # pyrefly: ignore [missing-import]
 import httpx
 # pyrefly: ignore [missing-import]
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, APIRouter
 
 # pyrefly: ignore [missing-import]
 from pydantic import BaseModel
 load_dotenv()
 app = FastAPI(title="AI Todo List", version="1.0.0")
+
+router = APIRouter(prefix="/api/ai")
 
 LLM_MODEL = os.getenv("LLM_MODEL")
 OLLAMA_HOST = os.getenv("OLLAMA_HOST")
@@ -20,12 +22,12 @@ class TodoRequest(BaseModel):
     title: str
 
 
-@app.get("/health")
+@router.get("/health")
 def health_check():
     return {"status":"ok", "model":LLM_MODEL}
 
 
-@app.post("/generate")
+@router.post("/generate")
 async def generate_description(todo: TodoRequest):
     prompt = f"Generate a concise, 2-sentence actionable description for the todo task: {todo.title}, Respond with only the description in string format and dont add quotes. "
     print(OLLAMA_HOST)
@@ -50,3 +52,6 @@ async def generate_description(todo: TodoRequest):
         print(f"Error calling LLM provider: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to LLM Model service")
 
+
+
+app.include_router(router)

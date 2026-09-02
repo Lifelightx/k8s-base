@@ -1,8 +1,8 @@
 import TodoItem from './TodoItem';
 
 const EMPTY = {
-  All:    { label: 'No tasks yet',        sub: 'Add something above to get started.' },
-  Active: { label: 'All caught up!',      sub: 'No active tasks right now.' },
+  All:    { label: 'No tasks yet',          sub: 'Add something above to get started.' },
+  Active: { label: 'All caught up!',        sub: 'No active tasks right now.' },
   Done:   { label: 'Nothing completed yet', sub: 'Finish a task to see it here.' },
 };
 
@@ -13,7 +13,7 @@ const ListIcon = () => (
   </svg>
 );
 
-export default function TodoList({ todos, loading, filter, onToggle, onDelete, onUpdate }) {
+export default function TodoList({ todos, loading, filter, onToggle, onDelete, onUpdate, onTaskClick }) {
   if (loading) {
     return (
       <div className="state-center">
@@ -35,7 +35,7 @@ export default function TodoList({ todos, loading, filter, onToggle, onDelete, o
   }
 
   return (
-    <div className="task-list" role="list">
+    <div className="task-grid" role="list">
       {todos.map((t) => (
         <TodoItem
           key={t._id}
@@ -43,6 +43,7 @@ export default function TodoList({ todos, loading, filter, onToggle, onDelete, o
           onToggle={onToggle}
           onDelete={onDelete}
           onUpdate={onUpdate}
+          onClick={onTaskClick}
         />
       ))}
     </div>

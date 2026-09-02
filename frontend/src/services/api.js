@@ -62,3 +62,10 @@ export const clearCompleted = () =>
     method: 'DELETE',
     headers: authHeaders(),
   }).then(handle);
+
+export const planTaskWithAI = (taskName, description) =>
+  fetch('/api/ai/plan', {
+    method: 'POST',
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ taskName, description }),
+  }).then(handle);

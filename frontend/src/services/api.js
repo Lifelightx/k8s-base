@@ -67,5 +67,5 @@ export const planTaskWithAI = (taskName, description) =>
   fetch('/api/ai/plan', {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ taskName, description }),
+    body: JSON.stringify({ title: taskName, desc: description }),
   }).then(handle);

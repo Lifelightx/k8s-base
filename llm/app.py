@@ -21,6 +21,9 @@ OLLAMA_HOST = os.getenv("OLLAMA_HOST")
 class TodoRequest(BaseModel):
     title: str
 
+class PlanRequest(BaseModel):
+    title: str
+    desc: str
 
 @router.get("/health")
 def health_check():
@@ -52,6 +55,26 @@ async def generate_description(todo: TodoRequest):
         print(f"Error calling LLM provider: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to LLM Model service")
 
+@router.post("/plan")
+async def generate_plan(plan: PlanRequest):
+    prompt = f"Break down the following task into 3-5 small, actionable sub-tasks. Return ONLY a numbered list of steps without any introductory text.\nTask: {plan.title}\nDescription: {plan.desc}"
+    
+    try:
+        async with httpx.AsyncClient(timeout=None) as client:
+            response = await client.post(
+                f"{OLLAMA_HOST}/api/generate",
+                json={
+                    "model": LLM_MODEL,
+                    "prompt": prompt,
+                    "stream": False
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            return {"plan": data.get("response", "").strip()}
 
+    except httpx.HTTPError as e:
+        print(f"Error calling LLM provider: {e}")
+        raise HTTPException(status_code=500, detail="Failed to connect to LLM Model service")
 
 app.include_router(router)

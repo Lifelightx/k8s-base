@@ -8,7 +8,7 @@ const todoSchema = new mongoose.Schema(
       trim: true,
       maxlength: [200, 'Todo text cannot exceed 200 characters'],
     },
-    id: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       index: true

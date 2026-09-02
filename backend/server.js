@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const connectDB = require('./src/config/db');
 const todoRoutes = require('./src/routes/todos');
 const errorHandler = require('./src/middleware/errorHandler');
+const protect = require('./src/middleware/protect')
 const logger = require('./src/utils/logger');
 const crypto = require("crypto");
 const os = require("os");

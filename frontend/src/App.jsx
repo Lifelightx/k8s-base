@@ -2,10 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import ComposeTodo    from './components/ComposeTodo';
 import TodoList       from './components/TodoList';
 import ToastContainer from './components/ToastContainer';
+import LandingPage    from './components/LandingPage';
+import LoginPage      from './components/LoginPage';
+import SignupPage     from './components/SignupPage';
 import {
   fetchTodos, fetchStats, createTodo,
   toggleTodo, deleteTodo, updateTodo, clearCompleted,
 } from './services/api';
+import { authMe, authLogout } from './services/auth';
 import { useToast } from './hooks/useToast';
 
 const FILTERS = ['All', 'Active', 'Done'];
@@ -22,7 +26,14 @@ function greeting() {
   return 'Good evening';
 }
 
+// ── Pages ──
+const PAGES = { landing: 'landing', login: 'login', signup: 'signup', app: 'app' };
+
 export default function App() {
+  const [page,    setPage]    = useState(PAGES.landing);
+  const [user,    setUser]    = useState(null);
+  const [authChk, setAuthChk] = useState(true); // checking session on mount
+
   const [todos,   setTodos]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [online,  setOnline]  = useState(navigator.onLine);
@@ -31,6 +42,19 @@ export default function App() {
   const [stats,   setStats]   = useState({ total:0, completed:0, active:0, byPriority:{} });
   const { toasts, toast, dismiss } = useToast();
 
+  /* ── Check session on mount ── */
+  useEffect(() => {
+    authMe()
+      .then((data) => {
+        const u = data.user ?? data;
+        setUser(u);
+        setPage(PAGES.app);
+      })
+      .catch(() => { /* not logged in – stay on landing */ })
+      .finally(() => setAuthChk(false));
+  }, []);
+
+  /* ── Online/Offline ── */
   useEffect(() => {
     const on  = () => setOnline(true);
     const off = () => setOnline(false);
@@ -39,17 +63,34 @@ export default function App() {
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, []);
 
+  /* ── Load todos when on app page ── */
   const refreshStats = () => fetchStats().then(setStats).catch(() => {});
 
   useEffect(() => {
+    if (page !== PAGES.app) return;
+    setLoading(true);
     fetchTodos()
       .then(setTodos)
       .catch(() => toast('Could not load tasks', 'error'))
       .finally(() => setLoading(false));
     refreshStats();
-  }, []);
+  }, [page]);
 
-  /* ── Handlers ── */
+  /* ── Auth handlers ── */
+  const handleAuthSuccess = (userData) => {
+    setUser(userData);
+    setPage(PAGES.app);
+  };
+
+  const handleLogout = async () => {
+    try { await authLogout(); } catch (_) { /* ignore */ }
+    setUser(null);
+    setTodos([]);
+    setStats({ total:0, completed:0, active:0, byPriority:{} });
+    setPage(PAGES.landing);
+  };
+
+  /* ── Todo Handlers ── */
   const handleAdd = async (text, priority) => {
     try {
       const t = await createTodo(text, priority);
@@ -119,16 +160,75 @@ export default function App() {
   const countFor = (f) =>
     f === 'All' ? stats.total : f === 'Active' ? stats.active : stats.completed;
 
+  /* ── Render ── */
+  if (authChk) {
+    return (
+      <div className="app-loading">
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  if (page === PAGES.landing) {
+    return (
+      <>
+        <LandingPage
+          onLogin={() => setPage(PAGES.login)}
+          onSignup={() => setPage(PAGES.signup)}
+        />
+        <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      </>
+    );
+  }
+
+  if (page === PAGES.login) {
+    return (
+      <>
+        <LoginPage
+          onSuccess={handleAuthSuccess}
+          onSignup={() => setPage(PAGES.signup)}
+          onBack={() => setPage(PAGES.landing)}
+        />
+        <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      </>
+    );
+  }
+
+  if (page === PAGES.signup) {
+    return (
+      <>
+        <SignupPage
+          onSuccess={handleAuthSuccess}
+          onLogin={() => setPage(PAGES.login)}
+          onBack={() => setPage(PAGES.landing)}
+        />
+        <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      </>
+    );
+  }
+
+  /* ── Notes App ── */
   return (
     <div className="app">
 
       {/* Header */}
       <header className="app-header">
         <div className="header-top">
-          <h1 className="app-title">{greeting()}</h1>
-          <div className="header-status">
-            <span className={`status-dot${online ? '' : ' offline'}`} />
-            {online ? 'Synced' : 'Offline'}
+          <h1 className="app-title">{greeting()}{user?.name ? `, ${user.name.split(' ')[0]}` : ''}</h1>
+          <div className="header-right-group">
+            <div className="header-status">
+              <span className={`status-dot${online ? '' : ' offline'}`} />
+              {online ? 'Synced' : 'Offline'}
+            </div>
+            <button
+              id="btn-logout"
+              className="btn-logout"
+              onClick={handleLogout}
+              title="Log out"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+              Logout
+            </button>
           </div>
         </div>
         <p className="header-sub">
@@ -140,7 +240,7 @@ export default function App() {
         </p>
       </header>
 
-      {/* Progress (only when there's data) */}
+      {/* Progress */}
       {stats.total > 0 && (
         <div className="progress-section">
           <div className="progress-meta">

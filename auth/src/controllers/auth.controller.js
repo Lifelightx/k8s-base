@@ -34,7 +34,7 @@ const registerUser = async (req, res) => {
 
         if (user) {
             res.status(201).json({
-                _id: user._id,
+                userId: user._id,
                 email: user.email,
                 token: generateToken(user._id)
             })
@@ -70,4 +70,18 @@ const loginUser = async (req, res) => {
 
 }
 
-module.exports = { registerUser, loginUser}
+const getMe = async (req, res) => {
+    try {
+        // req.user is attached by the protect middleware
+        const user = req.user;
+        res.status(200).json({
+            userId: user._id,
+            name:   user.name,
+            email:  user.email,
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to fetch user', error: error.message });
+    }
+};
+
+module.exports = { registerUser, loginUser, getMe };

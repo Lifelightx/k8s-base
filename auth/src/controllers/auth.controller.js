@@ -16,7 +16,7 @@ const registerUser = async (req, res) => {
     try {
 
 
-        const { email, name, profession, age, password } = req.body;
+        const { email, name, profession="enginner", age=18, password } = req.body;
         const userExists = await User.findOne({ email })
         if (userExists) {
             return res.status(400).json({

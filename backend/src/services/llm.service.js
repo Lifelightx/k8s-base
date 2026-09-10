@@ -3,7 +3,7 @@ const axios = require("axios")
 
 async function generateDesc(topic) {
 
-    const llmRs = await axios.post(`${LLM_SERVICE_URL}/generate`,
+    const llmRs = await axios.post(`${LLM_SERVICE_URL}/api/ai/generate`,
         { title: topic },
         { timeout: 10000 }
     )

@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: todo-gateway
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todo-gateway
+
+  template:
+    metadata:
+      labels:
+        app: todo-gateway
+    spec:
+      containers:
+        - name: gateway
+          image: k8s-todo-gateway:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          env:
+            - name: PORT
+              value: "5000"
+            - name: AUTH_SERVICE_URL
+              value: "http://todo-auth:5002"
+            - name: BACKEND_SERVICE_URL
+              value: "http://todo-backend:5001"
+            - name: LLM_SERVICE_URL
+              value: "http://todo-llm:5003"
+            - name: ALLOW_ORIGIN
+              value: "http://todo.app.com"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-gateway
+spec:
+  selector:
+    app: todo-gateway
+  ports:
+    - port: 5000
+      targetPort: 5000
+  type: ClusterIP
+

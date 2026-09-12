@@ -8,7 +8,7 @@ variables:
 
 build-frontend:
   stage: build
-  image: docker:24.0.5
+  image: docker:latest
   script:
     - echo "Building Frontend Image..."
     - cd frontend

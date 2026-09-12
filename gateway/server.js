@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
@@ -33,6 +34,15 @@ app.use(createProxyMiddleware({
     pathFilter: "/api/todos"
 }));
 
+// Socket.io WebSocket Proxy – stored in variable for upgrade wiring
+const socketProxy = createProxyMiddleware({
+    target: SERVICES.backend,
+    changeOrigin: true,
+    ws: true,
+    pathFilter: "/socket.io"
+});
+app.use(socketProxy);
+
 // LLM Service Proxy
 app.use(createProxyMiddleware({
     target: SERVICES.llm,
@@ -45,6 +55,13 @@ app.get('/health', (req, res) => {
     res.status(200).json({ status: 'Gateway is running' });
 });
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+// Manually handle WebSocket upgrade (required for http-proxy-middleware v4)
+server.on('upgrade', (req, socket, head) => {
+    socketProxy.upgrade(req, socket, head);
+});
+
+server.listen(PORT, () => {
     console.log(`Gateway service listening on port ${PORT}`);
 });

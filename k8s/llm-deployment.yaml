@@ -24,9 +24,15 @@ spec:
             - name: PORT
               value: "5003"
             - name: LLM_MODEL
-              value: "gemma4:31b-cloud"
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: LLM_MODEL
             - name: OLLAMA_HOST
-              value: "http://host.minikube.internal:11434"
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: OLLAMA_HOST
 
 
 ---

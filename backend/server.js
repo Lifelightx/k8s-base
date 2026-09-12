@@ -1,11 +1,14 @@
 require('dotenv').config();
+require('./src/services/queue.service');
+const { initQueueWorker } =  require('./src/services/queue.service');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const connectDB = require('./src/config/db');
 const todoRoutes = require('./src/routes/todos');
 const errorHandler = require('./src/middleware/errorHandler');
-const protect = require('./src/middleware/protect')
+const http = require('http');
+const { Server } = require('socket.io');
 const logger = require('./src/utils/logger');
 const crypto = require("crypto");
 const os = require("os");
@@ -27,12 +30,13 @@ app.use(
 app.use(cors());
 app.use(express.json());
 
+//initializing socket.io
+
 // Routes
 app.use('/api/todos', todoRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  logger.debug('Health check hit');
   res.json({ status: 'ok' });
 });
 
@@ -63,6 +67,24 @@ app.get("/api/crash", (req, res) => {
 // Error handler
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+// We attach io to the app so we can use it inside our worker/routes
+app.set('io', io)
+io.on('connection', (socket)=>{
+  logger.info(`New client connected: ${socket.id}`)
+  socket.on('disconnect', ()=>{
+    logger.info(`Client disconnected: ${socket.id}`)
+  })
+})
+
+initQueueWorker(io);
+
+server.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
 });

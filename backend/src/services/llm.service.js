@@ -3,17 +3,19 @@ const axios = require("axios")
 
 async function generateDesc(topic) {
 
-    const llmRs = await axios.post(`${LLM_SERVICE_URL}/api/ai/generate`,
-        { title: topic },
-        { timeout: 10000 }
-    )
-    if (llmRs.status !== 200) {
-        logger.error(`Failed to fetch details from LLM service: status=${llmRs.status}`)
-        res.status(500).json({ message: "Failed to fetch details from LLM service" })
-        return;
-    }
+    try{
+        const llmRs = await axios.post(`${LLM_SERVICE_URL}/api/ai/generate`,
+            { title: topic },
+            { timeout: 10000 }
+        )
+        if (llmRs.status !== 200) {
+            throw new Error(`Invalid status code: ${llmRs.status}`)
+        }
 
-    return llmRs.data.description || ""
+        return llmRs.data.description || ""
+    }catch(err){
+        throw new Error('Failed to fetch details from LLM service')
+    }
 }
 
 module.exports = { generateDesc }

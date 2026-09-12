@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: k8s-todo-gateway:v1
+          image: k8s-todo-gateway:v3
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000
@@ -25,13 +25,25 @@ spec:
             - name: PORT
               value: "5000"
             - name: AUTH_SERVICE_URL
-              value: "http://todo-auth:5002"
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: AUTH_SERVICE_URL
             - name: BACKEND_SERVICE_URL
-              value: "http://todo-backend:5001"
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: BACKEND_SERVICE_URL
             - name: LLM_SERVICE_URL
-              value: "http://todo-llm:5003"
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: LLM_SERVICE_URL
             - name: ALLOW_ORIGIN
-              value: "http://todo.app.com"
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: ALLOW_ORIGIN
 
 ---
 apiVersion: v1

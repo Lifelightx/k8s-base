@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { io } from 'socket.io-client';
 import ComposeTodo      from './components/ComposeTodo';
 import TodoList         from './components/TodoList';
 import ToastContainer   from './components/ToastContainer';
@@ -65,6 +66,27 @@ export default function App() {
     window.addEventListener('offline', off);
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, []);
+
+  /* ── Socket.io: keep toast in a ref so it never triggers reconnects ── */
+  const toastRef = useRef(toast);
+  useEffect(() => { toastRef.current = toast; }, [toast]);
+
+  /* ── Socket.io updates ── */
+  const isLoggedIn = !!user;
+  useEffect(() => {
+    if (page !== PAGES.app || !isLoggedIn) return;
+    
+    const socket = io({ transports: ['websocket'] });
+    
+    socket.on('todoUpdated', (updatedTodo) => {
+      setTodos((prevTodos) => 
+        prevTodos.map((t) => (t._id === updatedTodo._id ? updatedTodo : t))
+      );
+      toastRef.current('AI description ready!', 'success');
+    });
+
+    return () => socket.disconnect();
+  }, [page, isLoggedIn]);
 
   /* ── Load todos when on app page ── */
   const refreshStats = () => fetchStats().then(setStats).catch(() => {});

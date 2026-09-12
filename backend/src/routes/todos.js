@@ -3,7 +3,8 @@ const router = express.Router();
 const Todo = require('../models/Todo');
 const logger = require('../utils/logger');
 const { generateDesc } = require('../services/llm.service')
-const protect = require('../middleware/protect')
+const protect = require('../middleware/protect');
+const { llmQueue } = require('../services/queue.service');
 
 router.use(protect)
 // GET all todos (with optional filter/sort)
@@ -51,10 +52,26 @@ router.get('/stats', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   try {
     const { text, priority = 'medium' } = req.body;
-    description = await generateDesc(text) || ""
     const userId = req.user.id
-    const todo = await Todo.create({ text, userId, description, priority });
+
+    //create todo immediately without the description
+    const todo = await Todo.create({ text, userId, description: "", priority });
     logger.info(`Todo created: id=${todo._id} text="${todo.text}" priority=${todo.priority}`);
+
+    // Add a background job to fetch the description
+    // BullMQ will handle retries automatically if the LLM service is down
+
+    await llmQueue.add('generate-desc', {
+      todoId: todo._id,
+      text: todo.text
+    }, {
+      attempts: 10, // Retry upto 10 times
+      backoff: {
+        type: 'exponential',
+        delay: 5000 // wait 5s, then 10, then 20
+      }
+    })
+
     res.status(201).json(todo);
   } catch (err) {
     next(err);

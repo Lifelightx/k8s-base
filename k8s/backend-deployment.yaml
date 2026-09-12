@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: backend 
-          image: k8s-todo-backend:v6
+          image: k8s-todo-backend:v8
           imagePullPolicy: IfNotPresent
 
           ports:
@@ -28,11 +28,25 @@ spec:
             - name: PORT
               value: "5001"
             - name: MONGO_URI
-              value: "mongodb://mongodb:27017/todoapp"
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: MONGO_URI
             - name: JWT_SECRETE
-              value: "hello-234567890-!@#4567"
+              valueFrom:
+                secretKeyRef:
+                  name: todo-secret
+                  key: JWT_SECRETE
             - name: LLM_SERVICE_URL
-              value: "http://todo-llm:5003"
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: LLM_SERVICE_URL
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: REDIS_URL
           startupProbe:
             httpGet:
               path: /api/health

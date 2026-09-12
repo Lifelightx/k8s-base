@@ -11,6 +11,11 @@ export default defineConfig({
         target: 'http://gateway:5000',
         changeOrigin: true,
       },
+      '/socket.io': {
+        target: 'http://gateway:5000',
+        changeOrigin: true,
+        ws: true,
+      }
     },
   },
 });

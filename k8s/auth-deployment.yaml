@@ -26,9 +26,15 @@ spec:
           - name: PORT
             value: "5002"
           - name: MONGO_URI
-            value: "mongodb://mongodb:27017/todoapp"
+            valueFrom:
+              configMapKeyRef:
+                name: todo-config
+                key: MONGO_URI
           - name: JWT_SECRETE
-            value: "hello-234567890-!@#4567"
+            valueFrom:
+              secretKeyRef:
+                name: todo-secret
+                key: JWT_SECRETE
 
 ---
 apiVersion: v1

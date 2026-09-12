@@ -1,0 +1,32 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  # This tag will be unique per commit
+  FRONTEND_IMAGE: k8s-todo-frontend:$CI_COMMIT_SHORT_SHA
+
+build-frontend:
+  stage: build
+  image: docker:24.0.5
+  script:
+    - echo "Building Frontend Image..."
+    - cd frontend
+    - docker build -t $FRONTEND_IMAGE .
+    # The runner has access to the host docker socket, so it can load the image directly into Minikube's daemon!
+    - echo "Loading image into Minikube..."
+    - docker save $FRONTEND_IMAGE | docker exec -i minikube docker load
+  only:
+    changes:
+      - frontend/**/*
+
+deploy-frontend:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Deploying Frontend to Kubernetes..."
+    # We need to tell kubectl to use the new image tag
+    - kubectl set image deployment/todo-frontend frontend=$FRONTEND_IMAGE
+  only:
+    changes:
+      - frontend/**/*

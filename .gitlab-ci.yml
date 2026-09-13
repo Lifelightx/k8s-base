@@ -22,7 +22,9 @@ build-frontend:
 
 deploy-frontend:
   stage: deploy
-  image: bitnami/kubectl:latest
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
   script:
     - echo "Deploying Frontend to Kubernetes..."
     # We need to tell kubectl to use the new image tag

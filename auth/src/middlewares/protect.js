@@ -2,13 +2,16 @@ const jwt  = require('jsonwebtoken');
 const User = require('../models/user.model');
 
 const protect = async (req, res, next) => {
-    const authHeader = req.headers.authorization;
+    let token = req.cookies && req.cookies.token; // Try getting from cookie first
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ message: 'No token provided' });
+    // Fallback to Authorization header for testing or other clients
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+        token = req.headers.authorization.split(' ')[1];
     }
 
-    const token = authHeader.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ message: 'No token provided' });
+    }
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRETE);

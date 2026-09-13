@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Todo = require('../models/Todo');
 const logger = require('../utils/logger');
-const { generateDesc } = require('../services/llm.service')
+
 const protect = require('../middleware/protect');
 const { llmQueue } = require('../services/queue.service');
 

@@ -10,62 +10,63 @@ const handle = async (res) => {
   return res.json();
 };
 
-/* Attach Bearer token to every request */
-const authHeaders = (extra = {}) => {
-  const token = getToken();
+/* Provide base options with credentials included to send HttpOnly cookies */
+const getOptions = (extraHeaders = {}) => {
   return {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...extra,
+    credentials: 'include',
+    headers: {
+      ...extraHeaders,
+    },
   };
 };
 
 export const fetchTodos = (params = {}) => {
   const q = new URLSearchParams(params).toString();
   return fetch(`${BASE_URL}${q ? '?' + q : ''}`, {
-    headers: authHeaders(),
+    ...getOptions(),
   }).then(handle);
 };
 
 export const fetchStats = () =>
   fetch(`${BASE_URL}/stats`, {
-    headers: authHeaders(),
+    ...getOptions(),
   }).then(handle);
 
 export const createTodo = (text, priority = 'medium') =>
   fetch(BASE_URL, {
     method: 'POST',
-    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    ...getOptions({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ text, priority }),
   }).then(handle);
 
 export const toggleTodo = (id) =>
   fetch(`${BASE_URL}/${id}/toggle`, {
     method: 'PATCH',
-    headers: authHeaders(),
+    ...getOptions(),
   }).then(handle);
 
 export const updateTodo = (id, payload) =>
   fetch(`${BASE_URL}/${id}`, {
     method: 'PUT',
-    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    ...getOptions({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(payload),
   }).then(handle);
 
 export const deleteTodo = (id) =>
   fetch(`${BASE_URL}/${id}`, {
     method: 'DELETE',
-    headers: authHeaders(),
+    ...getOptions(),
   }).then(handle);
 
 export const clearCompleted = () =>
   fetch(`${BASE_URL}/completed`, {
     method: 'DELETE',
-    headers: authHeaders(),
+    ...getOptions(),
   }).then(handle);
 
 export const planTaskWithAI = (taskName, description) =>
   fetch('/api/ai/plan', {
     method: 'POST',
-    headers: authHeaders({ 'Content-Type': 'application/json' }),
+    ...getOptions({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ title: taskName, desc: description }),
   }).then(handle);

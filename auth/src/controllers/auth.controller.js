@@ -33,10 +33,16 @@ const registerUser = async (req, res) => {
         })
 
         if (user) {
+            const token = generateToken(user._id);
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 24 * 60 * 60 * 1000 // 1 day
+            });
             res.status(201).json({
                 userId: user._id,
-                email: user.email,
-                token: generateToken(user._id)
+                email: user.email
             })
         }
         else {
@@ -57,9 +63,15 @@ const loginUser = async (req, res) => {
         const user = await User.findOne({ email })
 
         if (user && (await user.matchPassword(password))) {
+            const token = generateToken(user._id);
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 24 * 60 * 60 * 1000 // 1 day
+            });
             res.status(200).json({
-                userId: user._id,
-                token: generateToken(user._id)
+                userId: user._id
             })
         } else {
             res.status(400).json({ message: 'Invalid credentials' })

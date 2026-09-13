@@ -30,7 +30,7 @@ describe('Todo Routes', ()=>{
     })
 
     describe('GET /api/todos', ()=>{
-    it('Should return a list of todos', async ()=>{
+    it('Should return a list of todos ', async ()=>{
         const fakeTodos = [
             {_id: '1', text:'Buy car', priority: 'high', description:'test', completed: false, userId: 'fakeUserId'},
             {_id: '2', text: 'Learn Testing', priority:'medium', description:'test', completed: true, userId: 'fakeUserId'}

@@ -21,7 +21,7 @@ test-backend:
     - npm run test
   only:
     changes:
-      - /backend/**/*
+      - backend/**/*
 
 build-frontend:
   stage: build

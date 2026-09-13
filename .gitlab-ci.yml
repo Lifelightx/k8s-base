@@ -5,6 +5,10 @@ stages:
 variables:
   # This tag will be unique per commit
   FRONTEND_IMAGE: k8s-todo-frontend:$CI_COMMIT_SHORT_SHA
+  BACKEND_IMAGE: k8s-todo-backend:$CI_COMMIT_SHORT_SHA
+  AUTH_IMAGE: k8s-todo-auth:$CI_COMMIT_SHORT_SHA
+  GATEWAY_IMAGE: k8s-todo-gateway:$CI_COMMIT_SHORT_SHA
+  LLM_IMAGE: k8s-todo-llm:$CI_COMMIT_SHORT_SHA
 
 build-frontend:
   stage: build
@@ -16,6 +20,8 @@ build-frontend:
     # The runner has access to the host docker socket, so it can load the image directly into Minikube's daemon!
     - echo "Loading image into Minikube..."
     - docker save $FRONTEND_IMAGE | docker exec -i minikube docker load
+    - echo "Cleaning up dangling images to save space..."
+    - docker exec -i minikube docker image prune -f
   only:
     changes:
       - frontend/**/*
@@ -30,3 +36,102 @@ deploy-frontend:
   only:
     changes:
       - frontend/**/*
+
+build-backend:
+  stage: build
+  image: docker:latest
+  script:
+    - echo "Building Backend Image..."
+    - cd backend
+    - docker build -t $BACKEND_IMAGE .
+    - echo "Loading image into Minikube..."
+    - docker save $BACKEND_IMAGE | docker exec -i minikube docker load
+    - echo "Cleaning up dangling images to save space..."
+    - docker exec -i minikube docker image prune -f
+  only:
+    changes:
+      - backend/**/*
+
+deploy-backend:
+  stage: deploy
+  image: docker:latest
+  script:
+    - echo "Deploying Backend to Kubernetes..."
+    - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-backend backend=$BACKEND_IMAGE"
+  only:
+    changes:
+      - backend/**/*
+
+# --- AUTH SERVICE ---
+build-auth:
+  stage: build
+  image: docker:latest
+  script:
+    - echo "Building Auth Image..."
+    - cd auth
+    - docker build -t $AUTH_IMAGE .
+    - echo "Loading image into minikube..."
+    - docker save $AUTH_IMAGE | docker exec -i minikube docker load
+    - echo "Cleaning up dangling image to save space..."
+    - docker exec -i minikube docker image prune -f 
+  only:
+    changes:
+      - auth/**/*
+
+deploy-auth:
+  stage: deploy
+  image: docker:latest
+  script:
+    - echo "Deploying Auth to Kubernetes..."
+    - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-auth auth=$AUTH_IMAGE"
+  only:
+    changes:
+      - auth/**/*
+
+build-gateway:
+  stage: build
+  image: docker:latest
+  script:
+    - echo "Building gateway Image..."
+    - cd gateway
+    - docker build -t $GATEWAY_IMAGE .
+    - echo "Loading image into Minikube"
+    - docker save $GATEWAY_IMAGE | docker exec -i minikube docker load
+    - echo "Cleaning up -i minikube docker image prune -f"
+  only:
+    changes:
+      - gateway/**/*
+deploy-gateway:
+  stage: deploy
+  image: docker:latest
+  script:
+    - echo "Deploying gateway to Kubernetes..."
+    - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-gateway gateway=$GATEWAY_IMAGE"
+  only:
+    changes:
+      - gateway/**/*
+
+build-llm:
+  stage: build
+  image: docker:latest
+  script:
+    - "Building LLM Image..."
+    - cd llm
+    - docker build -t $LLM_IMAGE .
+    - echo "Loading image into Minikube..."
+    - docker save $LLM_IMAGE | docker exec -i minikube docker load
+    - echo "Cleaning up dangling images to save space..."
+    - docker exec -i minikube docker image prune -f 
+  only:
+    changes:
+      - llm/**/*
+
+deploy-llm:
+  stage: deploy
+  image: docker:latest
+  script:
+    - echo "Deploying LLM to Kubernetes..."
+    - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-llm llm=$LLM_IMAGE"
+  only:
+    changes:
+      - llm/**/*

@@ -22,13 +22,11 @@ build-frontend:
 
 deploy-frontend:
   stage: deploy
-  image:
-    name: bitnami/kubectl:latest
-    entrypoint: [""]
+  image: docker:latest
   script:
     - echo "Deploying Frontend to Kubernetes..."
     # We need to tell kubectl to use the new image tag
-    - kubectl set image deployment/todo-frontend frontend=$FRONTEND_IMAGE
+    - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-frontend frontend=$FRONTEND_IMAGE"
   only:
     changes:
       - frontend/**/*

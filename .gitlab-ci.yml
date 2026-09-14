@@ -1,8 +1,11 @@
 stages:
+  - lint
+  - security
   - test
   - build
   - deploy
-
+  - smoke-test
+  
 variables:
   # This tag will be unique per commit
   FRONTEND_IMAGE: k8s-todo-frontend:$CI_COMMIT_SHORT_SHA
@@ -10,6 +13,29 @@ variables:
   AUTH_IMAGE: k8s-todo-auth:$CI_COMMIT_SHORT_SHA
   GATEWAY_IMAGE: k8s-todo-gateway:$CI_COMMIT_SHORT_SHA
   LLM_IMAGE: k8s-todo-llm:$CI_COMMIT_SHORT_SHA
+
+lint-backend:
+  stage: lint
+  image: node:22-alpine
+  script: 
+    - cd backend
+    - npm install
+    - npm run lint
+  only:
+    changes:
+      - backend/**/*
+
+security-audit-backend:
+  stage: security
+  image: node:22-alpine
+  script:
+    - cd backend
+    - npm audit --audit-level=critical
+  allow_failure: true
+  only:
+    changes:
+      - backend/package-lock.json
+
 
 test-backend:
   stage: test
@@ -147,4 +173,18 @@ deploy-llm:
     - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-llm llm=$LLM_IMAGE"
   only:
     changes:
+      - llm/**/*
+
+smoke-test-all:
+  stage: smoke-test
+  image: curlimages/curl:latest
+  script:
+    - echo "Testing if all services are live.."
+    # Maps todo.app.com to the Minikube IP inside the curl container
+    - curl -f --resolve todo.app.com:80:192.168.49.2 http://todo.app.com/api/health || exit 1
+  only:
+    changes:
+      - backend/**/*
+      - auth/**/*
+      - gateway/**/*
       - llm/**/*

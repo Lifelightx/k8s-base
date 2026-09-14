@@ -16,9 +16,7 @@ variables:
 
 lint-backend:
   stage: lint
-  image: 
-    name: node:22-alpine
-    pull_policy: if-not-present
+  image: node:22-alpine
   script: 
     - cd backend
     - npm install
@@ -30,9 +28,7 @@ lint-backend:
 
 security-audit-backend:
   stage: security
-  image: 
-    name: node:22-alpine
-    pull_policy: if-not-present
+  image: node:22-alpine
   script:
     - cd backend
     - npm audit --audit-level=critical
@@ -45,9 +41,7 @@ security-audit-backend:
 
 test-backend:
   stage: test
-  image: 
-    name: node:22-alpine
-    pull_policy: if-not-present
+  image: node:22-alpine
   script:
     - echo "Running Backend unit tests..."
     - cd backend
@@ -60,9 +54,7 @@ test-backend:
 
 build-frontend:
   stage: build
-  image: 
-    name: docker:latest
-    pull_policy: if-not-present
+  image: docker:latest
   script:
     - echo "Building Frontend Image..."
     - cd frontend
@@ -79,9 +71,7 @@ build-frontend:
 
 deploy-frontend:
   stage: deploy
-  image: 
-    name: docker:latest
-    pull_policy: if-not-present
+  image: docker:latest
   script:
     - echo "Deploying Frontend to Kubernetes..."
     # We need to tell kubectl to use the new image tag
@@ -93,9 +83,7 @@ deploy-frontend:
 
 build-backend:
   stage: build
-  image: 
-    name: docker:latest
-    pull_policy: if-not-present
+  image: docker:latest
   script:
     - echo "Building Backend Image..."
     - cd backend
@@ -111,9 +99,7 @@ build-backend:
 
 deploy-backend:
   stage: deploy
-  image: 
-    name: docker:latest
-    pull_policy: if-not-present
+  image: docker:latest
   script:
     - echo "Deploying Backend to Kubernetes..."
     - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-backend backend=$BACKEND_IMAGE"
@@ -125,9 +111,7 @@ deploy-backend:
 # --- AUTH SERVICE ---
 build-auth:
   stage: build
-  image: 
-    name: docker:latest
-    pull_policy: if-not-present
+  image: docker:latest
   script:
     - echo "Building Auth Image..."
     - cd auth
@@ -143,9 +127,7 @@ build-auth:
 
 deploy-auth:
   stage: deploy
-  image: 
-    name: docker:latest
-    pull_policy: if-not-present
+  image: docker:latest
   script:
     - echo "Deploying Auth to Kubernetes..."
     - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-auth auth=$AUTH_IMAGE"
@@ -156,9 +138,7 @@ deploy-auth:
 
 build-gateway:
   stage: build
-  image: 
-    name: docker:latest
-    pull_policy: if-not-present
+  image: docker:latest
   script:
     - echo "Building gateway Image..."
     - cd gateway
@@ -172,9 +152,7 @@ build-gateway:
       - gateway/**/*
 deploy-gateway:
   stage: deploy
-  image: 
-    name: docker:latest
-    pull_policy: if-not-present
+  image: docker:latest
   script:
     - echo "Deploying gateway to Kubernetes..."
     - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-gateway gateway=$GATEWAY_IMAGE"
@@ -185,9 +163,7 @@ deploy-gateway:
 
 build-llm:
   stage: build
-  image: 
-    name: docker:latest
-    pull_policy: if-not-present
+  image: docker:latest
   script:
     - echo "Building LLM Image..."
     - cd llm
@@ -203,9 +179,7 @@ build-llm:
 
 deploy-llm:
   stage: deploy
-  image: 
-    name: docker:latest
-    pull_policy: if-not-present
+  image: docker:latest
   script:
     - echo "Deploying LLM to Kubernetes..."
     - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-llm llm=$LLM_IMAGE"
@@ -216,9 +190,7 @@ deploy-llm:
 
 smoke-test-all:
   stage: smoke-test
-  image: 
-    name: curlimages/curl:latest
-    pull_policy: if-not-present
+  image: curlimages/curl:latest
   script:
     - echo "Testing if all services are live.."
     # Maps todo.app.com to the Minikube IP inside the curl container

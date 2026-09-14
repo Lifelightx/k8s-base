@@ -21,8 +21,9 @@ lint-backend:
     - cd backend
     - npm install
     - npm run lint
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - backend/**/*
 
 security-audit-backend:
@@ -32,8 +33,9 @@ security-audit-backend:
     - cd backend
     - npm audit --audit-level=critical
   allow_failure: true
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - backend/package-lock.json
 
 
@@ -45,8 +47,9 @@ test-backend:
     - cd backend
     - npm install
     - npm run test
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - backend/**/*
 
 build-frontend:
@@ -61,8 +64,9 @@ build-frontend:
     - docker save $FRONTEND_IMAGE | docker exec -i minikube docker load
     - echo "Cleaning up dangling images to save space..."
     - docker exec -i minikube docker image prune -f
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - frontend/**/*
 
 deploy-frontend:
@@ -72,8 +76,9 @@ deploy-frontend:
     - echo "Deploying Frontend to Kubernetes..."
     # We need to tell kubectl to use the new image tag
     - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-frontend frontend=$FRONTEND_IMAGE"
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - frontend/**/*
 
 build-backend:
@@ -87,8 +92,9 @@ build-backend:
     - docker save $BACKEND_IMAGE | docker exec -i minikube docker load
     - echo "Cleaning up dangling images to save space..."
     - docker exec -i minikube docker image prune -f
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - backend/**/*
 
 deploy-backend:
@@ -97,8 +103,9 @@ deploy-backend:
   script:
     - echo "Deploying Backend to Kubernetes..."
     - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-backend backend=$BACKEND_IMAGE"
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - backend/**/*
 
 # --- AUTH SERVICE ---
@@ -113,8 +120,9 @@ build-auth:
     - docker save $AUTH_IMAGE | docker exec -i minikube docker load
     - echo "Cleaning up dangling image to save space..."
     - docker exec -i minikube docker image prune -f 
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - auth/**/*
 
 deploy-auth:
@@ -123,8 +131,9 @@ deploy-auth:
   script:
     - echo "Deploying Auth to Kubernetes..."
     - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-auth auth=$AUTH_IMAGE"
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - auth/**/*
 
 build-gateway:
@@ -137,8 +146,9 @@ build-gateway:
     - echo "Loading image into Minikube"
     - docker save $GATEWAY_IMAGE | docker exec -i minikube docker load
     - echo "Cleaning up -i minikube docker image prune -f"
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - gateway/**/*
 deploy-gateway:
   stage: deploy
@@ -146,8 +156,9 @@ deploy-gateway:
   script:
     - echo "Deploying gateway to Kubernetes..."
     - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-gateway gateway=$GATEWAY_IMAGE"
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - gateway/**/*
 
 build-llm:
@@ -161,8 +172,9 @@ build-llm:
     - docker save $LLM_IMAGE | docker exec -i minikube docker load
     - echo "Cleaning up dangling images to save space..."
     - docker exec -i minikube docker image prune -f 
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - llm/**/*
 
 deploy-llm:
@@ -171,8 +183,9 @@ deploy-llm:
   script:
     - echo "Deploying LLM to Kubernetes..."
     - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-llm llm=$LLM_IMAGE"
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - llm/**/*
 
 smoke-test-all:
@@ -182,8 +195,9 @@ smoke-test-all:
     - echo "Testing if all services are live.."
     # Maps todo.app.com to the Minikube IP inside the curl container
     - curl -f --resolve todo.app.com:80:192.168.49.2 http://todo.app.com/api/health || exit 1
-  only:
-    changes:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - changes:
       - backend/**/*
       - auth/**/*
       - gateway/**/*

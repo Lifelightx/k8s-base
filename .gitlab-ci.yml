@@ -190,11 +190,11 @@ deploy-llm:
 
 smoke-test-all:
   stage: smoke-test
-  image: curlimages/curl:latest
+  image: docker:latest
   script:
     - echo "Testing if all services are live.."
-    # Maps todo.app.com to the Minikube IP inside the curl container
-    - curl -f --resolve todo.app.com:80:192.168.49.2 http://todo.app.com/api/health || exit 1
+    # Run curl directly inside the Minikube container to bypass docker-in-docker network isolation
+    - docker exec minikube curl -f -H "Host: todo.app.com" http://localhost/api/health || exit 1
   rules:
     - if: $CI_PIPELINE_SOURCE == "web"
     - changes:

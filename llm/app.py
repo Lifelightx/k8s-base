@@ -71,7 +71,7 @@ async def generate_plan(plan: PlanRequest):
             )
             response.raise_for_status()
             data = response.json()
-            return {"plan": data.get("response", "").strip()}
+            return {"plan": data.get("response ", "").strip()}
 
     except httpx.HTTPError as e:
         print(f"Error calling LLM provider: {e}")

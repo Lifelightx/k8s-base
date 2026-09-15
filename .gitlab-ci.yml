@@ -194,7 +194,7 @@ smoke-test-all:
   script:
     - echo "Testing if all services are live.."
     # Run curl directly inside the Minikube container to bypass docker-in-docker network isolation
-    - docker exec minikube curl -f -H "Host: todo.app.com" http://localhost/api/health || exit 1
+    - 'docker exec minikube curl -f -H "Host: todo.app.com" http://localhost/api/health || exit 1'
   rules:
     - if: $CI_PIPELINE_SOURCE == "web"
     - changes:

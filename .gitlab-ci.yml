@@ -69,18 +69,6 @@ build-frontend:
     - changes:
       - frontend/**/*
 
-deploy-frontend:
-  stage: deploy
-  image: docker:latest
-  script:
-    - echo "Deploying Frontend to Kubernetes..."
-    # We need to tell kubectl to use the new image tag
-    - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-frontend frontend=$FRONTEND_IMAGE"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - frontend/**/*
-
 build-backend:
   stage: build
   image: docker:latest
@@ -92,17 +80,6 @@ build-backend:
     - docker save $BACKEND_IMAGE | docker exec -i minikube docker load
     - echo "Cleaning up dangling images to save space..."
     - docker exec -i minikube docker image prune -f
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - backend/**/*
-
-deploy-backend:
-  stage: deploy
-  image: docker:latest
-  script:
-    - echo "Deploying Backend to Kubernetes..."
-    - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-backend backend=$BACKEND_IMAGE"
   rules:
     - if: $CI_PIPELINE_SOURCE == "web"
     - changes:
@@ -125,17 +102,6 @@ build-auth:
     - changes:
       - auth/**/*
 
-deploy-auth:
-  stage: deploy
-  image: docker:latest
-  script:
-    - echo "Deploying Auth to Kubernetes..."
-    - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-auth auth=$AUTH_IMAGE"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - auth/**/*
-
 build-gateway:
   stage: build
   image: docker:latest
@@ -146,16 +112,6 @@ build-gateway:
     - echo "Loading image into Minikube"
     - docker save $GATEWAY_IMAGE | docker exec -i minikube docker load
     - echo "Cleaning up -i minikube docker image prune -f"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - gateway/**/*
-deploy-gateway:
-  stage: deploy
-  image: docker:latest
-  script:
-    - echo "Deploying gateway to Kubernetes..."
-    - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-gateway gateway=$GATEWAY_IMAGE"
   rules:
     - if: $CI_PIPELINE_SOURCE == "web"
     - changes:
@@ -177,16 +133,26 @@ build-llm:
     - changes:
       - llm/**/*
 
-deploy-llm:
+deploy-all:
   stage: deploy
   image: docker:latest
   script:
-    - echo "Deploying LLM to Kubernetes..."
-    - docker exec minikube sh -c "/var/lib/minikube/binaries/*/kubectl --kubeconfig /var/lib/minikube/kubeconfig set image deployment/todo-llm llm=$LLM_IMAGE"
+    - echo "Deploying everything using Helm..."
+    # 1. Download and install helm inside minikube (if not present)
+    - docker exec minikube sh -c "curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 && chmod 700 get_helm.sh && ./get_helm.sh || true"
+    # 2. Copy the helm chart to the minikube container
+    - docker cp todo-app minikube:/todo-app
+    # 3. Run helm upgrade
+    - docker exec minikube sh -c "/usr/local/bin/helm upgrade --install k8s-todo /todo-app --kubeconfig /var/lib/minikube/kubeconfig --set frontend.image.tag=$CI_COMMIT_SHORT_SHA --set backend.image.tag=$CI_COMMIT_SHORT_SHA --set auth.image.tag=$CI_COMMIT_SHORT_SHA --set gateway.image.tag=$CI_COMMIT_SHORT_SHA --set llm.image.tag=$CI_COMMIT_SHORT_SHA"
   rules:
     - if: $CI_PIPELINE_SOURCE == "web"
     - changes:
+      - frontend/**/*
+      - backend/**/*
+      - auth/**/*
+      - gateway/**/*
       - llm/**/*
+      - todo-app/**/*
 
 smoke-test-all:
   stage: smoke-test

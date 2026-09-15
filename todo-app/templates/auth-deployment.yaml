@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+
+
+metadata:
+  name: todo-auth
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: todo-auth
+  template:
+    metadata:
+      labels:
+        app: todo-auth
+    spec:
+      containers:
+      - name: auth
+        image: {{ .Values.auth.image.repository }}:{{ .Values.auth.image.tag }}
+        imagePullPolicy: {{ .Values.auth.image.pullPolicy }}
+        ports:
+          - containerPort: 5002
+        env:
+          - name: PORT
+            value: "5002"
+          - name: MONGO_URI
+            valueFrom:
+              configMapKeyRef:
+                name: todo-config
+                key: MONGO_URI
+          - name: JWT_SECRETE
+            valueFrom:
+              secretKeyRef:
+                name: todo-secret
+                key: JWT_SECRETE
+
+---
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: todo-auth
+
+spec:
+  selector:
+    app: todo-auth
+  ports:
+    - port: 5002
+      targetPort: 5002
+  type: ClusterIP
+
+

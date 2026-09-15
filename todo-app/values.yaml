@@ -1,0 +1,61 @@
+# Global configurations
+global:
+  environment: "dev"
+
+# Auth Service
+auth:
+  image:
+    repository: k8s-todo-auth
+    tag: v1
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+
+# Backend Service
+backend:
+  image:
+    repository: k8s-todo-backend
+    tag: v8
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+
+# Frontend Service
+frontend:
+  image:
+    repository: k8s-todo-frontend
+    tag: v7
+    pullPolicy: IfNotPresent
+  replicaCount: 2
+
+# Gateway Service
+gateway:
+  image:
+    repository: k8s-todo-gateway
+    tag: v3
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+
+# LLM Service
+llm:
+  image:
+    repository: k8s-todo-llm
+    tag: v1
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+
+# MongoDB Service
+mongodb:
+  image:
+    repository: mongo
+    tag: "8"
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  storage:
+    size: 1Gi
+
+# Redis Service
+redis:
+  image:
+    repository: redis
+    tag: 7-alpine
+    pullPolicy: IfNotPresent
+  replicaCount: 1

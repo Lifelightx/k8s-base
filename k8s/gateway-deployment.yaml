@@ -44,6 +44,13 @@ spec:
                 configMapKeyRef:
                   name: todo-config
                   key: ALLOW_ORIGIN
+            - name: REDIS_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: todo-config
+                  key: REDIS_URL
+                  
+
 
 ---
 apiVersion: v1

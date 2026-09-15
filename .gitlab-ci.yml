@@ -138,11 +138,14 @@ deploy-all:
   image: docker:latest
   script:
     - echo "Deploying everything using Helm..."
-    # 1. Download and install helm inside minikube (if not present)
-    - docker exec minikube sh -c "curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 && chmod 700 get_helm.sh && ./get_helm.sh || true"
+    # 1. Download Helm on the runner (which has internet) and inject it into minikube
+    - apk add --no-cache curl tar
+    - curl -fsSL -o helm.tar.gz https://get.helm.sh/helm-v3.13.0-linux-amd64.tar.gz
+    - tar -zxvf helm.tar.gz
+    - docker cp linux-amd64/helm minikube:/usr/local/bin/helm
     # 2. Copy the helm chart to the minikube container
     - docker cp todo-app minikube:/todo-app
-    # 3. Run helm upgrade
+    # 3. Run helm upgrade inside minikube
     - docker exec minikube sh -c "/usr/local/bin/helm upgrade --install k8s-todo /todo-app --kubeconfig /var/lib/minikube/kubeconfig --set frontend.image.tag=$CI_COMMIT_SHORT_SHA --set backend.image.tag=$CI_COMMIT_SHORT_SHA --set auth.image.tag=$CI_COMMIT_SHORT_SHA --set gateway.image.tag=$CI_COMMIT_SHORT_SHA --set llm.image.tag=$CI_COMMIT_SHORT_SHA"
   rules:
     - if: $CI_PIPELINE_SOURCE == "web"

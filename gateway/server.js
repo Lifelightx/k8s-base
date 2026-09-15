@@ -4,10 +4,32 @@ const http = require('http');
 const axios = require('axios')
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const { createClient } = require('redis');
+const { rateLimit } = require('express-rate-limit');
+const { RadisStore, default: RedisStore } = require('rate-limit-redis');
 
+
+//create redis client 
+const redisClient = createClient({
+    url: process.env.REDIS_URL
+});
+
+redisClient.on('error', (err)=> console.error('Redis client error: ', err));
+redisClient.connect().then(()=> console.log('Gateway connected to Redis for rate limiting'))
+
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true, //Return rate limit info in the 'RateLimit-*' headers
+    legacyHeaders: false, //Disable the 'X-Ratelimit-*' headers
+    store: new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args)
+    }),
+    message: { error: 'Too many requests from this IP, please try again after 15 minutes.'}
+})
 const app = express();
 const PORT = process.env.PORT || 5000;
-
+app.use(globalLimiter)
 app.use(cors({
     origin: process.env.ALLOW_ORIGIN || 'http://localhost:3000',
     credentials: true

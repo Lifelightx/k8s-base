@@ -21,11 +21,7 @@ const PORT = process.env.PORT || 5000;
 connectDB();
 
 // HTTP request logger (morgan → custom logger)
-app.use(
-  morgan(':method :url :status :res[content-length] - :response-time ms', {
-    stream: { write: (msg) => logger.info(msg.trim()) },
-  })
-);
+
 
 // Middleware
 app.use(cors({
@@ -37,13 +33,21 @@ app.use(express.json());
 
 //initializing socket.io
 
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.use(
+  morgan(':method :url :status :res[content-length] - :response-time ms', {
+    stream: { write: (msg) => logger.info(msg.trim()) },
+  })
+);
+
 // Routes
 app.use('/api/todos', todoRoutes);
 
 // Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok' });
-});
+
 
 app.get("/api/crash", (req, res) => {
   console.log("Intentional crash request", {
@@ -83,6 +87,12 @@ const io = new Server(server, {
 app.set('io', io)
 io.on('connection', (socket)=>{
   logger.info(`New client connected: ${socket.id}`)
+  
+  socket.on('join', (userId) => {
+    socket.join(userId);
+    logger.info(`Socket ${socket.id} joined room: ${userId}`);
+  });
+
   socket.on('disconnect', ()=>{
     logger.info(`Client disconnected: ${socket.id}`)
   })

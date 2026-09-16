@@ -6,7 +6,7 @@ const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const { createClient } = require('redis');
 const { rateLimit } = require('express-rate-limit');
-const { RadisStore, default: RedisStore } = require('rate-limit-redis');
+const { RedisStore } = require('rate-limit-redis');
 
 
 //create redis client 

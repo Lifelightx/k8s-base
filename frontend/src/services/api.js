@@ -32,11 +32,16 @@ export const fetchStats = () =>
     ...getOptions(),
   }).then(handle);
 
-export const createTodo = (text, priority = 'medium') =>
+export const fetchTags = () =>
+  fetch(`${BASE_URL}/tags`, {
+    ...getOptions(),
+  }).then(handle);
+
+export const createTodo = (text, priority = 'medium', dueDate = null, remindersEnabled = true, tags = []) =>
   fetch(BASE_URL, {
     method: 'POST',
     ...getOptions({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ text, priority }),
+    body: JSON.stringify({ text, priority, dueDate, remindersEnabled, tags }),
   }).then(handle);
 
 export const toggleTodo = (id) =>

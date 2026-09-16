@@ -10,11 +10,12 @@ router.use(protect)
 // GET all todos (with optional filter/sort)
 router.get('/', async (req, res, next) => {
   try {
-    const { status, priority, sort = 'createdAt', order = 'desc' } = req.query;
+    const { status, priority, sort = 'createdAt', order = 'desc', tags } = req.query;
     const query = {};
     if (status === 'active') query.completed = false;
     if (status === 'done') query.completed = true;
     if (priority) query.priority = priority;
+    if (tags) query.tags = { $in: tags.split(',') };
     query.userId = req.user.id;
 
     const sortDir = order === 'asc' ? 1 : -1;
@@ -51,11 +52,11 @@ router.get('/stats', async (req, res, next) => {
 // POST create todo
 router.post('/', async (req, res, next) => {
   try {
-    const { text, priority = 'medium' } = req.body;
+    const { text, priority = 'medium', dueDate, remindersEnabled, tags = [] } = req.body;
     const userId = req.user.id
 
     //create todo immediately without the description
-    const todo = await Todo.create({ text, userId, description: "", priority });
+    const todo = await Todo.create({ text, userId, description: "", priority, dueDate, remindersEnabled, tags });
     logger.info(`Todo created: id=${todo._id} text="${todo.text}" priority=${todo.priority}`);
 
     // Add a background job to fetch the description
@@ -95,13 +96,16 @@ router.patch('/:id/toggle', async (req, res, next) => {
   }
 });
 
-// PUT update todo (text + priority)
+// PUT update todo (text + priority + dueDate + remindersEnabled + tags)
 router.put('/:id', async (req, res, next) => {
   try {
-    const { text, priority } = req.body;
+    const { text, priority, dueDate, remindersEnabled, tags } = req.body;
     const updates = {};
     if (text !== undefined) updates.text = text;
     if (priority !== undefined) updates.priority = priority;
+    if (dueDate !== undefined) updates.dueDate = dueDate;
+    if (remindersEnabled !== undefined) updates.remindersEnabled = remindersEnabled;
+    if (tags !== undefined) updates.tags = tags;
 
     const todo = await Todo.findOneAndUpdate({
       _id: req.params.id, userId: req.user.id
@@ -146,7 +150,15 @@ router.delete('/:id', async (req, res, next) => {
   }
 });
 
-
+// GET distinct tags
+router.get('/tags', async (req, res, next) => {
+  try {
+    const tags = await Todo.distinct('tags', { userId: req.user.id });
+    res.json(tags || []);
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Backwards-compat: PATCH /:id still toggles
 router.patch('/:id', async (req, res, next) => {

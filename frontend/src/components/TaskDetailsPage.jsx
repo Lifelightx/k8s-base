@@ -32,6 +32,10 @@ export default function TaskDetailsPage({ todo, onBack, onUpdate, onToggle, onDe
   const [editText, setEditText]     = useState(todo.text);
   const [editDesc, setEditDesc]     = useState(todo.description || '');
   const [editP,    setEditP]        = useState(todo.priority || 'medium');
+  const [editDueDate, setEditDueDate] = useState(todo.dueDate ? todo.dueDate.slice(0, 16) : '');
+  const [editReminders, setEditReminders] = useState(todo.remindersEnabled ?? true);
+  const [editTags, setEditTags]     = useState(todo.tags || []);
+  const [tagInput, setTagInput]     = useState('');
   const [saving,   setSaving]       = useState(false);
   const [aiPlan,   setAiPlan]       = useState(null);
   const [planning, setPlanning]     = useState(false);
@@ -44,7 +48,14 @@ export default function TaskDetailsPage({ todo, onBack, onUpdate, onToggle, onDe
     if (!t) return;
     setSaving(true);
     try {
-      await onUpdate(todo._id, { text: t, description: editDesc, priority: editP });
+      await onUpdate(todo._id, { 
+        text: t, 
+        description: editDesc, 
+        priority: editP,
+        dueDate: editDueDate || null,
+        remindersEnabled: editReminders,
+        tags: editTags
+      });
       toast?.('Task updated', 'success');
     } catch {
       toast?.('Failed to save', 'error');
@@ -143,6 +154,61 @@ export default function TaskDetailsPage({ todo, onBack, onUpdate, onToggle, onDe
               placeholder="Add more context..."
               rows={5}
             />
+          </div>
+
+          {/* Due Date & Reminders */}
+          <div className="td-field">
+            <label className="td-field-label">Due Date & Reminders</label>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '0.25rem' }}>
+              <input 
+                type="datetime-local" 
+                value={editDueDate} 
+                onChange={(e) => setEditDueDate(e.target.value)} 
+                className="td-title-input"
+                style={{ width: 'auto', padding: '0.4rem 0.6rem', minHeight: 'unset', fontSize: '0.9rem' }}
+              />
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: editDueDate ? 'pointer' : 'not-allowed', color: editDueDate ? '#374151' : '#9ca3af', fontSize: '0.9rem' }}>
+                <input 
+                  type="checkbox" 
+                  checked={editReminders} 
+                  onChange={(e) => setEditReminders(e.target.checked)}
+                  disabled={!editDueDate}
+                  style={{ cursor: editDueDate ? 'pointer' : 'not-allowed', width: '1rem', height: '1rem' }}
+                />
+                Send Reminders
+              </label>
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="td-field">
+            <label className="td-field-label">Tags</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.25rem' }}>
+              {editTags.map(t => (
+                <span key={t} style={{ background: '#e0e7ff', color: '#4338ca', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  {t}
+                  <button type="button" onClick={() => setEditTags(editTags.filter(tag => tag !== t))} style={{ background: 'none', border: 'none', color: '#4338ca', cursor: 'pointer', padding: 0 }}>&times;</button>
+                </span>
+              ))}
+              <input 
+                type="text" 
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const newTag = tagInput.trim().toLowerCase();
+                    if (newTag && !editTags.includes(newTag)) {
+                      setEditTags([...editTags, newTag]);
+                    }
+                    setTagInput('');
+                  }
+                }}
+                placeholder="Add tag (Enter)"
+                className="td-title-input"
+                style={{ width: '120px', padding: '0.2rem 0.5rem', minHeight: 'unset', fontSize: '0.8rem' }}
+              />
+            </div>
           </div>
 
           <div className="td-meta">

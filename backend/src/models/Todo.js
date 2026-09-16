@@ -27,6 +27,24 @@ const todoSchema = new mongoose.Schema(
       enum: ['low', 'medium', 'high'],
       default: 'medium',
     },
+    dueDate: {
+      type: Date,
+      default: null,
+      index: true
+    },
+    remindersEnabled: {
+      type: Boolean,
+      default: true
+    },
+    remindersSent: {
+      type: [String], //e.g ['24h', '1h']
+      default: []
+    },
+    tags: {
+      type: [String],
+      default: [],
+      index: true
+    }
   },
   { timestamps: true }
 );

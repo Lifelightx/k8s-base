@@ -78,11 +78,21 @@ export default function App() {
     
     const socket = io({ transports: ['websocket'] });
     
+    // Join the user's specific room to receive targeted events (like reminders)
+    if (user && user._id) {
+      socket.emit('join', user._id);
+    }
+
     socket.on('todoUpdated', (updatedTodo) => {
       setTodos((prevTodos) => 
         prevTodos.map((t) => (t._id === updatedTodo._id ? updatedTodo : t))
       );
       toastRef.current('AI description ready!', 'success');
+    });
+
+    socket.on('reminder', ({ todo, type }) => {
+      const timeStr = type === '24h' ? '24 hours' : '1 hour';
+      toastRef.current(`⏰ Reminder: "${todo.text}" is due in ${timeStr}`, 'warning');
     });
 
     return () => socket.disconnect();
@@ -116,9 +126,9 @@ export default function App() {
   };
 
   /* ── Todo Handlers ── */
-  const handleAdd = async (text, priority) => {
+  const handleAdd = async (text, priority, dueDate, remindersEnabled, tags) => {
     try {
-      const t = await createTodo(text, priority);
+      const t = await createTodo(text, priority, dueDate, remindersEnabled, tags);
       setTodos((p) => [t, ...p]);
       refreshStats();
       toast('Task added', 'success');
@@ -162,12 +172,20 @@ export default function App() {
 
   /* ── Filter + Sort ── */
   const [sortField, sortDir] = sortKey.split(':');
+  const [tagFilter, setTagFilter] = useState(null);
   const PRANK = { high: 0, medium: 1, low: 2 };
+
+  const availableTags = useMemo(() => {
+    const t = new Set();
+    todos.forEach(todo => todo.tags?.forEach(tag => t.add(tag)));
+    return Array.from(t).sort();
+  }, [todos]);
 
   const filtered = useMemo(() => {
     let list = [...todos];
     if (filter === 'Active') list = list.filter((t) => !t.completed);
     if (filter === 'Done')   list = list.filter((t) =>  t.completed);
+    if (tagFilter)           list = list.filter((t) => t.tags?.includes(tagFilter));
     list.sort((a, b) => {
       if (sortField === 'priority') {
         return sortDir === 'asc'
@@ -178,7 +196,7 @@ export default function App() {
       return sortDir === 'asc' ? diff : -diff;
     });
     return list;
-  }, [todos, filter, sortKey]);
+  }, [todos, filter, tagFilter, sortKey]);
 
   const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
@@ -367,6 +385,28 @@ export default function App() {
           )}
         </div>
       </div>
+
+      {/* Tag Filters */}
+      {availableTags.length > 0 && (
+        <div style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem 1rem', overflowX: 'auto', borderBottom: '1px solid #f3f4f6' }}>
+          <span style={{ fontSize: '0.8rem', color: '#6b7280', alignSelf: 'center', fontWeight: '500' }}>Tags:</span>
+          <button 
+            onClick={() => setTagFilter(null)}
+            style={{ padding: '0.2rem 0.6rem', borderRadius: '12px', border: '1px solid #d1d5db', background: tagFilter === null ? '#4f46e5' : 'transparent', color: tagFilter === null ? 'white' : '#374151', fontSize: '0.75rem', cursor: 'pointer' }}
+          >
+            All
+          </button>
+          {availableTags.map(tag => (
+            <button 
+              key={tag}
+              onClick={() => setTagFilter(tag)}
+              style={{ padding: '0.2rem 0.6rem', borderRadius: '12px', border: '1px solid #d1d5db', background: tagFilter === tag ? '#4f46e5' : 'transparent', color: tagFilter === tag ? 'white' : '#374151', fontSize: '0.75rem', cursor: 'pointer' }}
+            >
+              #{tag}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Grid */}
       <TodoList

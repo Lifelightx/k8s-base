@@ -87,6 +87,15 @@ export default function TodoItem({ todo, onToggle, onDelete, onClick }) {
         {todo.description && (
           <p className="task-card-desc">{todo.description}</p>
         )}
+        {todo.tags && todo.tags.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+            {todo.tags.map(t => (
+              <span key={t} style={{ background: '#f3f4f6', color: '#4b5563', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.7rem' }}>
+                #{t}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Footer */}

@@ -93,7 +93,12 @@ describe('Todo Routes', () => {
         text: 'New task',
         userId: 'fakeUserId',
         description: '',
-        priority: 'high'
+        priority: 'high',
+        dueDate: undefined,
+        remindersEnabled: undefined,
+        tags: [],
+        projectId: null,
+        recurrence: 'none'
       });
       
       // Ensure the background queue job was added

@@ -56,7 +56,6 @@ export default function TaskDetailsPage({ todo, onBack, onUpdate, onToggle, onDe
         priority: editP,
         dueDate: editDueDate || null,
         remindersEnabled: editReminders,
-        tags: editTags
         tags: editTags,
         subtasks: editSubtasks
       });

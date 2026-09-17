@@ -68,10 +68,6 @@ export const clearCompleted = () =>
     ...getOptions(),
   }).then(handle);
 
-export const fetchStats = () =>
-  fetch(`${BASE_URL}/stats`, {
-    ...getOptions(),
-  }).then(handle);
 
 export const fetchAnalytics = (days = 30) =>
   fetch(`${BASE_URL}/analytics?days=${days}`, {

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-config 
+
+data:
+  MONGO_URI: "mongodb://mongodb:27017/todoapp"
+  AUTH_SERVICE_URL: "http://todo-auth:5002"
+  BACKEND_SERVICE_URL: "http://todo-backend:5001"
+  LLM_SERVICE_URL: "http://todo-llm:5003"
+  ALLOW_ORIGIN: "http://todo.app.com"
+  LLM_MODEL: "gemma4:31b-cloud"
+  OLLAMA_HOST: "http://host.minikube.internal:11434"
+  REDIS_URL: "redis://todo-redis:6379"
+  VAPID_PUBLIC_KEY: "BCyq2R8yo0oTEQ_CHFdEyYLzs1SDY2bcR4KdmoiN0TYbwKXR83MM0HYPtVNit2N86ntP4rJNhjTJI3y-yyMndac"

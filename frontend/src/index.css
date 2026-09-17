@@ -2124,3 +2124,31 @@ kbd {
 
 .header-right-group { display: flex; align-items: center; gap: 0.5rem; }
 
+/* AI Prioritize Button */
+.btn-ai {
+  padding: 0.4rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--r);
+  background: linear-gradient(135deg, #f59e0b, #ec4899, #8b5cf6);
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+}
+
+.btn-ai:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(236, 72, 153, 0.5);
+}
+
+.btn-ai:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--surface2);
+  color: var(--text3);
+  box-shadow: none;
+}

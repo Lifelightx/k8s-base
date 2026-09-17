@@ -446,8 +446,7 @@ export default function App() {
             ))}
           </select>
           <button 
-            className="btn-secondary" 
-            style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+            className="btn-ai" 
             onClick={() => setShowReprioritize(true)}
             disabled={!todos.some(t => !t.completed)}
           >

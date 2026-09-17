@@ -10,16 +10,26 @@ router.use(protect)
 // GET all todos (with optional filter/sort)
 router.get('/', async (req, res, next) => {
   try {
-    const { status, priority, sort = 'createdAt', order = 'desc', tags } = req.query;
+    const { status, priority, sort = 'createdAt', order = 'desc', tags, search, projectId } = req.query;
     const query = {};
     if (status === 'active') query.completed = false;
     if (status === 'done') query.completed = true;
     if (priority) query.priority = priority;
     if (tags) query.tags = { $in: tags.split(',') };
+    if (projectId) query.projectId = projectId === 'inbox' ? null : projectId;
+    
+    if (search) {
+      query.$text = { $search: search };
+    }
+    
     query.userId = req.user.id;
 
     const sortDir = order === 'asc' ? 1 : -1;
-    const todos = await Todo.find(query).sort({ [sort]: sortDir });
+    
+    // Sort by textScore if searching, otherwise sort by user preference
+    const todos = await Todo.find(query)
+      .sort(search ? { score: { $meta: 'textScore' } } : { [sort]: sortDir });
+      
     logger.debug(`Fetched ${todos.length} todo(s)`);
     res.json(todos);
   } catch (err) {
@@ -52,11 +62,11 @@ router.get('/stats', async (req, res, next) => {
 // POST create todo
 router.post('/', async (req, res, next) => {
   try {
-    const { text, priority = 'medium', dueDate, remindersEnabled, tags = [] } = req.body;
+    const { text, priority = 'medium', dueDate, remindersEnabled, tags = [], projectId = null, recurrence = 'none' } = req.body;
     const userId = req.user.id
 
     //create todo immediately without the description
-    const todo = await Todo.create({ text, userId, description: "", priority, dueDate, remindersEnabled, tags });
+    const todo = await Todo.create({ text, userId, description: "", priority, dueDate, remindersEnabled, tags, projectId, recurrence });
     logger.info(`Todo created: id=${todo._id} text="${todo.text}" priority=${todo.priority}`);
 
     // Add a background job to fetch the description
@@ -89,6 +99,28 @@ router.patch('/:id/toggle', async (req, res, next) => {
     }
     todo.completed = !todo.completed;
     await todo.save();
+    
+    // Recurrence logic: spawn next task
+    if (todo.completed && todo.recurrence && todo.recurrence !== 'none' && todo.dueDate) {
+      const nextDate = new Date(todo.dueDate);
+      if (todo.recurrence === 'daily') nextDate.setDate(nextDate.getDate() + 1);
+      if (todo.recurrence === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
+      if (todo.recurrence === 'monthly') nextDate.setMonth(nextDate.getMonth() + 1);
+      
+      await Todo.create({
+        text: todo.text,
+        userId: todo.userId,
+        priority: todo.priority,
+        tags: todo.tags,
+        dueDate: nextDate,
+        recurrence: todo.recurrence,
+        remindersEnabled: todo.remindersEnabled,
+        projectId: todo.projectId,
+        description: todo.description
+      });
+      logger.info(`Recurrent todo spawned for: id=${todo._id}`);
+    }
+
     logger.info(`Todo toggled: id=${todo._id} completed=${todo.completed}`);
     res.json(todo);
   } catch (err) {
@@ -96,16 +128,19 @@ router.patch('/:id/toggle', async (req, res, next) => {
   }
 });
 
-// PUT update todo (text + priority + dueDate + remindersEnabled + tags)
+// PUT update todo
 router.put('/:id', async (req, res, next) => {
   try {
-    const { text, priority, dueDate, remindersEnabled, tags } = req.body;
+    const { text, priority, dueDate, remindersEnabled, tags, projectId, subtasks, recurrence } = req.body;
     const updates = {};
     if (text !== undefined) updates.text = text;
     if (priority !== undefined) updates.priority = priority;
     if (dueDate !== undefined) updates.dueDate = dueDate;
     if (remindersEnabled !== undefined) updates.remindersEnabled = remindersEnabled;
     if (tags !== undefined) updates.tags = tags;
+    if (projectId !== undefined) updates.projectId = projectId;
+    if (subtasks !== undefined) updates.subtasks = subtasks;
+    if (recurrence !== undefined) updates.recurrence = recurrence;
 
     const todo = await Todo.findOneAndUpdate({
       _id: req.params.id, userId: req.user.id

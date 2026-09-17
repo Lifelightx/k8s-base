@@ -54,7 +54,7 @@ app.use(createProxyMiddleware({
 app.use(createProxyMiddleware({
     target: SERVICES.backend,
     changeOrigin: true,
-    pathFilter: "/api/todos"
+    pathFilter: ["/api/todos", "/api/projects"]
 }));
 
 // Socket.io WebSocket Proxy – stored in variable for upgrade wiring

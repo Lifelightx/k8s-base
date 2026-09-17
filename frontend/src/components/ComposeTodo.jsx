@@ -8,6 +8,7 @@ export default function ComposeTodo({ onAdd }) {
   const [remindersEnabled, setRemindersEnabled] = useState(true);
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags]         = useState([]);
+  const [recurrence, setRecurrence] = useState('none');
   const [loading, setLoading]   = useState(false);
   const inputRef = useRef(null);
 
@@ -43,12 +44,13 @@ export default function ComposeTodo({ onAdd }) {
     if (!val || loading) return;
     setLoading(true);
     try {
-      await onAdd(val, priority, dueDate || null, remindersEnabled, tags);
+      await onAdd(val, priority, dueDate || null, remindersEnabled, tags, recurrence);
       setText('');
       setPriority('medium');
       setDueDate('');
       setRemindersEnabled(true);
       setTags([]);
+      setRecurrence('none');
     } finally { setLoading(false); }
   };
 
@@ -143,6 +145,19 @@ export default function ComposeTodo({ onAdd }) {
             <label htmlFor="reminders-check-compose" style={{ fontSize: '0.85rem', color: dueDate ? '#4b5563' : '#9ca3af', cursor: dueDate ? 'pointer' : 'not-allowed' }}>
               Reminders
             </label>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '1rem' }}>
+            <span className="priority-label">Recurrence</span>
+            <select
+              value={recurrence}
+              onChange={(e) => setRecurrence(e.target.value)}
+              style={{ fontSize: '0.85rem', padding: '0.25rem 0.5rem', borderRadius: '4px', border: '1px solid #d1d5db', background: 'transparent' }}
+            >
+              <option value="none">None</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
           </div>
         </div>
 

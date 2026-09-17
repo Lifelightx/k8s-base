@@ -44,9 +44,34 @@ const todoSchema = new mongoose.Schema(
       type: [String],
       default: [],
       index: true
-    }
+    },
+    projectId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Project',
+      default: null,
+      index: true
+    },
+    subtasks: {
+      type: [{
+        title: { type: String, required: true },
+        completed: { type: Boolean, default: false }
+      }],
+      default: []
+    },
+    recurrence: {
+      type: String,
+      enum: ['none', 'daily', 'weekly', 'monthly'],
+      default: 'none',
+    },
+    nextDueDate: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
+
+// Add compound text index for search functionality
+todoSchema.index({ text: 'text', description: 'text' });
 
 module.exports = mongoose.model('Todo', todoSchema);

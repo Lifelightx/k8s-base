@@ -101,6 +101,19 @@ export default function TodoItem({ todo, onToggle, onDelete, onClick }) {
       {/* Footer */}
       <div className="task-card-footer">
         <span className="task-time">{timeAgo(todo.createdAt)}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span className="task-time">{timeAgo(todo.createdAt)}</span>
+          {todo.project && todo.project !== 'Inbox' && (
+            <span style={{ fontSize: '0.7rem', color: '#6b7280', background: '#f3f4f6', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>
+              📁 {todo.project}
+            </span>
+          )}
+          {todo.subtasks && todo.subtasks.length > 0 && (
+            <span style={{ fontSize: '0.7rem', color: '#6b7280' }}>
+              ✓ {todo.subtasks.filter(s => s.completed).length}/{todo.subtasks.length}
+            </span>
+          )}
+        </div>
         <span
           className="task-card-priority"
           style={{ background: pc.bg, color: pc.text, border: `1px solid ${pc.border}` }}

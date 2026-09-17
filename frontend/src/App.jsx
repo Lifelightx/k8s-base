@@ -10,8 +10,10 @@ import ProfilePage      from './components/ProfilePage';
 import TaskDetailsPage  from './components/TaskDetailsPage';
 import {
   fetchTodos, fetchStats, createTodo,
-  toggleTodo, deleteTodo, updateTodo, clearCompleted,
+  toggleTodo, deleteTodo, updateTodo, clearCompleted, fetchProjects
 } from './services/api';
+import { useDebounce } from './hooks/useDebounce';
+import Sidebar from './components/Sidebar';
 import { authMe, authLogout } from './services/auth';
 import { useToast } from './hooks/useToast';
 
@@ -39,11 +41,15 @@ export default function App() {
   const [selectedTodo, setSelectedTodo] = useState(null);
 
   const [todos,   setTodos]   = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [online,  setOnline]  = useState(navigator.onLine);
   const [filter,  setFilter]  = useState('All');
   const [sortKey, setSortKey] = useState('createdAt:desc');
   const [stats,   setStats]   = useState({ total:0, completed:0, active:0, byPriority:{} });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeProjectId, setActiveProjectId] = useState('inbox');
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const { toasts, toast, dismiss } = useToast();
 
   /* ── Check session on mount ── */
@@ -104,11 +110,17 @@ export default function App() {
   useEffect(() => {
     if (page !== PAGES.app) return;
     setLoading(true);
-    fetchTodos()
+    fetchTodos({ search: debouncedSearch, projectId: activeProjectId })
       .then(setTodos)
       .catch(() => toast('Could not load tasks', 'error'))
       .finally(() => setLoading(false));
     refreshStats();
+  }, [page, debouncedSearch, activeProjectId]);
+
+  useEffect(() => {
+    if (page === PAGES.app) {
+      fetchProjects().then(setProjects).catch(() => {});
+    }
   }, [page]);
 
   /* ── Auth handlers ── */
@@ -126,9 +138,9 @@ export default function App() {
   };
 
   /* ── Todo Handlers ── */
-  const handleAdd = async (text, priority, dueDate, remindersEnabled, tags) => {
+  const handleAdd = async (text, priority, dueDate, remindersEnabled, tags, recurrence) => {
     try {
-      const t = await createTodo(text, priority, dueDate, remindersEnabled, tags);
+      const t = await createTodo(text, priority, dueDate, remindersEnabled, tags, activeProjectId === 'inbox' ? null : activeProjectId, recurrence);
       setTodos((p) => [t, ...p]);
       refreshStats();
       toast('Task added', 'success');
@@ -186,17 +198,21 @@ export default function App() {
     if (filter === 'Active') list = list.filter((t) => !t.completed);
     if (filter === 'Done')   list = list.filter((t) =>  t.completed);
     if (tagFilter)           list = list.filter((t) => t.tags?.includes(tagFilter));
-    list.sort((a, b) => {
-      if (sortField === 'priority') {
-        return sortDir === 'asc'
-          ? PRANK[a.priority] - PRANK[b.priority]
-          : PRANK[b.priority] - PRANK[a.priority];
-      }
-      const diff = new Date(a[sortField]) - new Date(b[sortField]);
-      return sortDir === 'asc' ? diff : -diff;
-    });
+    
+    // sorting is now done primarily on backend for textSearch, but we keep this for non-search
+    if (!debouncedSearch) {
+      list.sort((a, b) => {
+        if (sortField === 'priority') {
+          return sortDir === 'asc'
+            ? PRANK[a.priority] - PRANK[b.priority]
+            : PRANK[b.priority] - PRANK[a.priority];
+        }
+        const diff = new Date(a[sortField]) - new Date(b[sortField]);
+        return sortDir === 'asc' ? diff : -diff;
+      });
+    }
     return list;
-  }, [todos, filter, tagFilter, sortKey]);
+  }, [todos, filter, tagFilter, sortKey, debouncedSearch]);
 
   const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
@@ -281,7 +297,14 @@ export default function App() {
 
   /* ── Notes App ── */
   return (
-    <div className="app">
+    <div className="flex h-screen overflow-hidden bg-white">
+      <Sidebar 
+        projects={projects} 
+        setProjects={setProjects}
+        activeProjectId={activeProjectId} 
+        setActiveProjectId={setActiveProjectId} 
+      />
+      <div className="app flex-1 overflow-y-auto">
 
       {/* Header */}
       <header className="app-header">
@@ -338,6 +361,7 @@ export default function App() {
 
       {/* Toolbar */}
       <div className="toolbar">
+      <div className="toolbar" style={{ flexWrap: 'wrap', gap: '1rem' }}>
         <div className="filter-tabs" role="tablist">
           {FILTERS.map((f) => (
             <button
@@ -357,6 +381,17 @@ export default function App() {
             </button>
           ))}
         </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center', flexGrow: 1, minWidth: '200px' }}>
+          <input 
+            type="text" 
+            placeholder="Search tasks..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ width: '100%', padding: '0.4rem 0.8rem', borderRadius: '20px', border: '1px solid #d1d5db', fontSize: '0.85rem' }}
+          />
+        </div>
+
         <div className="toolbar-right">
           <select
             id="sort-select"
@@ -385,6 +420,8 @@ export default function App() {
           )}
         </div>
       </div>
+
+
 
       {/* Tag Filters */}
       {availableTags.length > 0 && (
@@ -432,6 +469,7 @@ export default function App() {
       )}
 
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      </div>
     </div>
   );
 }

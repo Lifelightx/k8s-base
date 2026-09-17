@@ -45,6 +45,8 @@ app.use(
 
 // Routes
 app.use('/api/todos', todoRoutes);
+const projectRoutes = require('./src/routes/projects');
+app.use('/api/projects', projectRoutes);
 
 // Health check
 

@@ -36,6 +36,8 @@ export default function TaskDetailsPage({ todo, onBack, onUpdate, onToggle, onDe
   const [editReminders, setEditReminders] = useState(todo.remindersEnabled ?? true);
   const [editTags, setEditTags]     = useState(todo.tags || []);
   const [tagInput, setTagInput]     = useState('');
+  const [editSubtasks, setEditSubtasks] = useState(todo.subtasks || []);
+  const [subtaskInput, setSubtaskInput] = useState('');
   const [saving,   setSaving]       = useState(false);
   const [aiPlan,   setAiPlan]       = useState(null);
   const [planning, setPlanning]     = useState(false);
@@ -55,6 +57,8 @@ export default function TaskDetailsPage({ todo, onBack, onUpdate, onToggle, onDe
         dueDate: editDueDate || null,
         remindersEnabled: editReminders,
         tags: editTags
+        tags: editTags,
+        subtasks: editSubtasks
       });
       toast?.('Task updated', 'success');
     } catch {
@@ -207,6 +211,53 @@ export default function TaskDetailsPage({ todo, onBack, onUpdate, onToggle, onDe
                 placeholder="Add tag (Enter)"
                 className="td-title-input"
                 style={{ width: '120px', padding: '0.2rem 0.5rem', minHeight: 'unset', fontSize: '0.8rem' }}
+              />
+            </div>
+          </div>
+
+          {/* Sub-tasks */}
+          <div className="td-field">
+            <label className="td-field-label">Sub-tasks</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.25rem' }}>
+              {editSubtasks.map((st, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f9fafb', padding: '0.4rem 0.5rem', borderRadius: '4px', border: '1px solid #f3f4f6' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={st.completed}
+                    onChange={(e) => {
+                      const copy = [...editSubtasks];
+                      copy[i].completed = e.target.checked;
+                      setEditSubtasks(copy);
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.85rem', flexGrow: 1, textDecoration: st.completed ? 'line-through' : 'none', color: st.completed ? '#9ca3af' : '#374151' }}>
+                    {st.title}
+                  </span>
+                  <button type="button" onClick={() => {
+                    const copy = [...editSubtasks];
+                    copy.splice(i, 1);
+                    setEditSubtasks(copy);
+                  }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}>&times;</button>
+                </div>
+              ))}
+              <input 
+                type="text" 
+                value={subtaskInput}
+                onChange={(e) => setSubtaskInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const title = subtaskInput.trim();
+                    if (title) {
+                      setEditSubtasks([...editSubtasks, { title, completed: false }]);
+                      setSubtaskInput('');
+                    }
+                  }
+                }}
+                placeholder="Add sub-task (Enter)"
+                className="td-title-input"
+                style={{ padding: '0.4rem 0.6rem', minHeight: 'unset', fontSize: '0.85rem' }}
               />
             </div>
           </div>

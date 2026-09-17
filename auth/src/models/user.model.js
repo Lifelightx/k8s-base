@@ -27,6 +27,10 @@ const userSchema = new mongoose.Schema({
     age:{
         type: Number,
         required: true,
+    },
+    pushSubscription: {
+        type: Object,
+        default: null
     }
 }, {timestamps: true});
 

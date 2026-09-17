@@ -96,4 +96,16 @@ const getMe = async (req, res) => {
     }
 };
 
-module.exports = { registerUser, loginUser, getMe };
+const pushSubscribe = async (req, res) => {
+    try {
+        const user = req.user;
+        const subscription = req.body;
+        user.pushSubscription = subscription;
+        await user.save();
+        res.status(200).json({ message: 'Push subscription saved' });
+    } catch (error) {
+        res.status(500).json({ message: 'Failed to save push subscription', error: error.message });
+    }
+};
+
+module.exports = { registerUser, loginUser, getMe, pushSubscribe };

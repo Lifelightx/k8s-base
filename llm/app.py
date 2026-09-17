@@ -25,6 +25,9 @@ class PlanRequest(BaseModel):
     title: str
     desc: str
 
+class PrioritizeRequest(BaseModel):
+    todos: list[dict]
+
 @router.get("/health")
 def health_check():
     return {"status":"ok", "model":LLM_MODEL}
@@ -76,5 +79,34 @@ async def generate_plan(plan: PlanRequest):
     except httpx.HTTPError as e:
         print(f"Error calling LLM provider: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to LLM Model service")
+
+@router.post("/prioritize")
+async def prioritize_todos(req: PrioritizeRequest):
+    import json
+    items = "\n".join([
+        f"- ID:{t.get('_id', t.get('id'))} | Text:{t['text']} | Due:{t.get('dueDate','none')} | Current:{t.get('priority', 'none')}"
+        for t in req.todos
+    ])
+    prompt = f"""You are a productivity assistant. For each todo below, suggest the best priority level (high/medium/low) and give a one-sentence reason.
+Return ONLY a valid JSON array: [{{"id":"...","priority":"high|medium|low","reason":"..."}}]
+Todos:
+{items}"""
+    try:
+        async with httpx.AsyncClient(timeout=None) as client:
+            response = await client.post(
+                f"{OLLAMA_HOST}/api/generate",
+                json={
+                    "model": LLM_MODEL,
+                    "prompt": prompt,
+                    "stream": False,
+                    "format": "json"
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            return {"suggestions": json.loads(data.get("response", "[]").strip())}
+    except Exception as e:
+        print(f"Error calling LLM provider: {e}")
+        raise HTTPException(status_code=500, detail="Failed to prioritize")
 
 app.include_router(router)

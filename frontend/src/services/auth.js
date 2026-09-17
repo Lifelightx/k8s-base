@@ -61,3 +61,12 @@ export const authMe = () => {
     credentials: 'include',
   }).then(handle);
 };
+
+export const authPushSubscribe = (subscription) => {
+  return fetch(`${BASE}/push-subscribe`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(subscription),
+  }).then(handle).catch(() => {}); // Best effort
+};

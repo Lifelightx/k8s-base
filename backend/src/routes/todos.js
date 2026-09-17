@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Todo = require('../models/Todo');
 const logger = require('../utils/logger');
+const mongoose = require('mongoose');
 
 const protect = require('../middleware/protect');
 const { llmQueue } = require('../services/queue.service');
@@ -59,6 +60,34 @@ router.get('/stats', async (req, res, next) => {
   }
 });
 
+// GET analytics data for dashboard
+router.get('/analytics', async (req, res, next) => {
+  try {
+    const days = parseInt(req.query.days) || 30;
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+
+    const data = await Todo.aggregate([
+      { 
+        $match: { 
+          userId: new mongoose.Types.ObjectId(req.user.id), 
+          completedAt: { $gte: since } 
+        } 
+      },
+      { 
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$completedAt' } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST create todo
 router.post('/', async (req, res, next) => {
   try {
@@ -98,6 +127,7 @@ router.patch('/:id/toggle', async (req, res, next) => {
       return res.status(404).json({ message: 'Todo not found' });
     }
     todo.completed = !todo.completed;
+    todo.completedAt = todo.completed ? new Date() : null;
     await todo.save();
     
     // Recurrence logic: spawn next task
@@ -170,6 +200,24 @@ router.delete('/completed', async (req, res, next) => {
   }
 });
 
+// PATCH apply bulk priority suggestions
+router.patch('/bulk-priority', async (req, res, next) => {
+  try {
+    // req.body = [{ id, priority }]
+    const ops = req.body.map(({ id, priority }) => ({
+      updateOne: { filter: { _id: id, userId: req.user.id }, update: { $set: { priority } } }
+    }));
+    
+    if (ops.length > 0) {
+      await Todo.bulkWrite(ops);
+    }
+    logger.info(`User ${req.user.id} bulk updated priority for ${ops.length} tasks`);
+    res.json({ updated: ops.length });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // DELETE todo
 router.delete('/:id', async (req, res, next) => {
   try {
@@ -201,6 +249,7 @@ router.patch('/:id', async (req, res, next) => {
     const todo = await Todo.findOne({ _id: req.params.id, userId: req.user.id });
     if (!todo) return res.status(404).json({ message: 'Todo not found' });
     todo.completed = !todo.completed;
+    todo.completedAt = todo.completed ? new Date() : null;
     await todo.save();
     res.json(todo);
   } catch (err) {

@@ -68,6 +68,30 @@ export const clearCompleted = () =>
     ...getOptions(),
   }).then(handle);
 
+export const fetchStats = () =>
+  fetch(`${BASE_URL}/stats`, {
+    ...getOptions(),
+  }).then(handle);
+
+export const fetchAnalytics = (days = 30) =>
+  fetch(`${BASE_URL}/analytics?days=${days}`, {
+    ...getOptions(),
+  }).then(handle);
+
+export const prioritizeTodos = (todos) =>
+  fetch('/api/ai/prioritize', {
+    method: 'POST',
+    ...getOptions({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ todos }),
+  }).then(handle);
+
+export const applyPriorities = (updates) =>
+  fetch(`${BASE_URL}/bulk-priority`, {
+    method: 'PATCH',
+    ...getOptions({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(updates),
+  }).then(handle);
+
 export const planTaskWithAI = (taskName, description) =>
   fetch('/api/ai/plan', {
     method: 'POST',

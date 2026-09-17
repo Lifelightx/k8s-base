@@ -1,0 +1,49 @@
+.reprioritize-modal {
+  max-width: 800px;
+  width: 90%;
+}
+
+.suggestions-list {
+  margin-top: 1rem;
+}
+
+.suggestions-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+
+.suggestions-list th,
+.suggestions-list td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.suggestions-list th {
+  background: var(--bg-surface);
+  font-weight: 600;
+}
+
+.reason {
+  font-size: 0.9em;
+  color: var(--text-secondary);
+}
+
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.prio-high { background: #fee2e2; color: #dc2626; }
+.prio-medium { background: #fef3c7; color: #d97706; }
+.prio-low { background: #d1fae5; color: #059669; }
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}

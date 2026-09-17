@@ -1,6 +1,28 @@
 const { Queue, Worker } = require("bullmq");
 const Todo = require("../models/Todo");
 const logger = require("../utils/logger");
+const webpush = require("web-push");
+const mongoose = require("mongoose");
+
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(
+        'mailto:admin@todo.app.com',
+        process.env.VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+    );
+}
+
+async function sendWebPush(userId, payload) {
+    try {
+        if (!process.env.VAPID_PUBLIC_KEY) return;
+        const user = await mongoose.connection.db.collection('users').findOne({ _id: new mongoose.Types.ObjectId(userId) });
+        if (user && user.pushSubscription) {
+            await webpush.sendNotification(user.pushSubscription, JSON.stringify(payload));
+        }
+    } catch (err) {
+        logger.error(`Push notification failed for user ${userId}: ${err.message}`);
+    }
+}
 
 const redisOptions = {
     connection: {
@@ -31,6 +53,11 @@ function initReminderWorker(io) {
         for (const todo of due24h) {
             // Emit to the specific user's room (userId as room name)
             io.to(todo.userId.toString()).emit('reminder', { todo, type: '24h' });
+            await sendWebPush(todo.userId, { 
+                title: 'Task due in 24h', 
+                body: todo.text, 
+                todoId: todo._id 
+            });
             await Todo.findByIdAndUpdate(todo._id, { $addToSet: { remindersSent: '24h' } });
             logger.info(`Sent 24h reminder for todo ${todo._id} to user ${todo.userId}`);
         }
@@ -45,6 +72,11 @@ function initReminderWorker(io) {
 
         for (const todo of due1h) {
             io.to(todo.userId.toString()).emit('reminder', { todo, type: '1h' });
+            await sendWebPush(todo.userId, { 
+                title: 'Task due in 1h', 
+                body: todo.text, 
+                todoId: todo._id 
+            });
             await Todo.findByIdAndUpdate(todo._id, { $addToSet: { remindersSent: '1h' } });
             logger.info(`Sent 1h reminder for todo ${todo._id} to user ${todo.userId}`);
         }

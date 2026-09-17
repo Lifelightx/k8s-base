@@ -8,13 +8,15 @@ import LoginPage        from './components/LoginPage';
 import SignupPage       from './components/SignupPage';
 import ProfilePage      from './components/ProfilePage';
 import TaskDetailsPage  from './components/TaskDetailsPage';
+import DashboardPage    from './components/DashboardPage';
+import ReprioritizeModal from './components/ReprioritizeModal';
 import {
   fetchTodos, fetchStats, createTodo,
   toggleTodo, deleteTodo, updateTodo, clearCompleted, fetchProjects
 } from './services/api';
 import { useDebounce } from './hooks/useDebounce';
 import Sidebar from './components/Sidebar';
-import { authMe, authLogout } from './services/auth';
+import { authMe, authLogout, authPushSubscribe } from './services/auth';
 import { useToast } from './hooks/useToast';
 
 const FILTERS = ['All', 'Active', 'Done'];
@@ -32,13 +34,14 @@ function greeting() {
 }
 
 // ── Pages ──
-const PAGES = { landing: 'landing', login: 'login', signup: 'signup', app: 'app', profile: 'profile', taskDetail: 'taskDetail' };
+const PAGES = { landing: 'landing', login: 'login', signup: 'signup', app: 'app', profile: 'profile', taskDetail: 'taskDetail', dashboard: 'dashboard' };
 
 export default function App() {
   const [page,         setPage]        = useState(PAGES.landing);
   const [user,         setUser]        = useState(null);
   const [authChk,      setAuthChk]     = useState(true);
   const [selectedTodo, setSelectedTodo] = useState(null);
+  const [showReprioritize, setShowReprioritize] = useState(false);
 
   const [todos,   setTodos]   = useState([]);
   const [projects, setProjects] = useState([]);
@@ -52,6 +55,22 @@ export default function App() {
   const debouncedSearch = useDebounce(searchQuery, 300);
   const { toasts, toast, dismiss } = useToast();
 
+  /* ── Service Worker & Push ── */
+  const subscribeToPush = async () => {
+    try {
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
+        });
+        await authPushSubscribe(sub);
+      }
+    } catch (e) {
+      console.warn('Push subscription failed:', e);
+    }
+  };
+
   /* ── Check session on mount ── */
   useEffect(() => {
     authMe()
@@ -59,6 +78,7 @@ export default function App() {
         const u = data.user ?? data;
         setUser(u);
         setPage(PAGES.app);
+        subscribeToPush();
       })
       .catch(() => { /* not logged in – stay on landing */ })
       .finally(() => setAuthChk(false));
@@ -127,6 +147,7 @@ export default function App() {
   const handleAuthSuccess = (userData) => {
     setUser(userData);
     setPage(PAGES.app);
+    subscribeToPush();
   };
 
   const handleLogout = async () => {
@@ -279,6 +300,19 @@ export default function App() {
     );
   }
 
+  if (page === PAGES.dashboard) {
+    return (
+      <div className="flex h-screen bg-white">
+        <div style={{ padding: '1rem', flex: 1, overflowY: 'auto' }}>
+          <button className="btn-secondary" style={{marginBottom: '1rem'}} onClick={() => setPage(PAGES.app)}>
+            ← Back to Tasks
+          </button>
+          <DashboardPage />
+        </div>
+      </div>
+    );
+  }
+
   if (page === PAGES.taskDetail && selectedTodo) {
     return (
       <>
@@ -315,6 +349,14 @@ export default function App() {
               <span className={`status-dot${online ? '' : ' offline'}`} />
               {online ? 'Synced' : 'Offline'}
             </div>
+            <button
+              className="btn btn-ghost"
+              onClick={() => setPage(PAGES.dashboard)}
+              title="Dashboard"
+              style={{ padding: '0.4rem 0.6rem', marginLeft: '0.5rem' }}
+            >
+              Dashboard
+            </button>
             <button
               className="btn btn-ghost"
               onClick={() => setPage(PAGES.profile)}
@@ -403,6 +445,14 @@ export default function App() {
               <option key={s.value} value={s.value}>{s.label}</option>
             ))}
           </select>
+          <button 
+            className="btn-secondary" 
+            style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}
+            onClick={() => setShowReprioritize(true)}
+            disabled={!todos.some(t => !t.completed)}
+          >
+            ✨ AI Prioritize
+          </button>
           {stats.completed > 0 && (
             <button
               id="btn-clear-done"
@@ -465,6 +515,17 @@ export default function App() {
             Low&nbsp;{stats.byPriority?.low ?? 0}
           </span>
         </footer>
+      )}
+
+      {showReprioritize && (
+        <ReprioritizeModal 
+          todos={todos}
+          onClose={() => setShowReprioritize(false)}
+          onApplied={() => {
+            fetchTodos({ search: debouncedSearch, projectId: activeProjectId }).then(setTodos);
+            refreshStats();
+          }}
+        />
       )}
 
       <ToastContainer toasts={toasts} onDismiss={dismiss} />

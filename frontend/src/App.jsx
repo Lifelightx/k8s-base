@@ -360,7 +360,6 @@ export default function App() {
       <ComposeTodo onAdd={handleAdd} />
 
       {/* Toolbar */}
-      <div className="toolbar">
       <div className="toolbar" style={{ flexWrap: 'wrap', gap: '1rem' }}>
         <div className="filter-tabs" role="tablist">
           {FILTERS.map((f) => (

@@ -1,173 +1,130 @@
 stages:
-  - lint
-  - security
-  - test
-  - build
-  - deploy
-  - smoke-test
-  
+- lint
+- security
+- test
+- build
+- deploy
+- smoke-test
 variables:
-  # This tag will be unique per commit
   FRONTEND_IMAGE: k8s-todo-frontend:$CI_COMMIT_SHORT_SHA
   BACKEND_IMAGE: k8s-todo-backend:$CI_COMMIT_SHORT_SHA
   AUTH_IMAGE: k8s-todo-auth:$CI_COMMIT_SHORT_SHA
   GATEWAY_IMAGE: k8s-todo-gateway:$CI_COMMIT_SHORT_SHA
   LLM_IMAGE: k8s-todo-llm:$CI_COMMIT_SHORT_SHA
-
 lint-backend:
   stage: lint
   image: node:22-alpine
-  script: 
-    - cd backend
-    - npm install
-    - npm run lint
+  script:
+  - cd backend
+  - npm install
+  - npm run lint
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - backend/**/*
-
+  - if: $CI_PIPELINE_SOURCE == "web"
 security-audit-backend:
   stage: security
   image: node:22-alpine
   script:
-    - cd backend
-    - npm audit --audit-level=critical
+  - cd backend
+  - npm audit --audit-level=critical
   allow_failure: true
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - backend/package-lock.json
-
-
+  - if: $CI_PIPELINE_SOURCE == "web"
 test-backend:
   stage: test
   image: node:22-alpine
   script:
-    - echo "Running Backend unit tests..."
-    - cd backend
-    - npm install
-    - npm run test
+  - echo "Running Backend unit tests..."
+  - cd backend
+  - npm install
+  - npm run test
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - backend/**/*
-
+  - if: $CI_PIPELINE_SOURCE == "web"
 build-frontend:
   stage: build
   image: docker:latest
   script:
-    - echo "Building Frontend Image..."
-    - cd frontend
-    - docker build -t $FRONTEND_IMAGE .
-    # The runner has access to the host docker socket, so it can load the image directly into Minikube's daemon!
-    - echo "Loading image into Minikube..."
-    - docker save $FRONTEND_IMAGE | docker exec -i minikube docker load
-    - echo "Cleaning up dangling images to save space..."
-    - docker exec -i minikube docker image prune -f
+  - echo "Building Frontend Image..."
+  - cd frontend
+  - docker build -t $FRONTEND_IMAGE .
+  - echo "Loading image into Minikube..."
+  - docker save $FRONTEND_IMAGE | docker exec -i minikube docker load
+  - echo "Cleaning up dangling images to save space..."
+  - docker exec -i minikube docker image prune -f
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - frontend/**/*
-
+  - if: $CI_PIPELINE_SOURCE == "web"
 build-backend:
   stage: build
   image: docker:latest
   script:
-    - echo "Building Backend Image..."
-    - cd backend
-    - docker build -t $BACKEND_IMAGE .
-    - echo "Loading image into Minikube..."
-    - docker save $BACKEND_IMAGE | docker exec -i minikube docker load
-    - echo "Cleaning up dangling images to save space..."
-    - docker exec -i minikube docker image prune -f
+  - echo "Building Backend Image..."
+  - cd backend
+  - docker build -t $BACKEND_IMAGE .
+  - echo "Loading image into Minikube..."
+  - docker save $BACKEND_IMAGE | docker exec -i minikube docker load
+  - echo "Cleaning up dangling images to save space..."
+  - docker exec -i minikube docker image prune -f
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - backend/**/*
-
-# --- AUTH SERVICE ---
+  - if: $CI_PIPELINE_SOURCE == "web"
 build-auth:
   stage: build
   image: docker:latest
   script:
-    - echo "Building Auth Image..."
-    - cd auth
-    - docker build -t $AUTH_IMAGE .
-    - echo "Loading image into minikube..."
-    - docker save $AUTH_IMAGE | docker exec -i minikube docker load
-    - echo "Cleaning up dangling image to save space..."
-    - docker exec -i minikube docker image prune -f 
+  - echo "Building Auth Image..."
+  - cd auth
+  - docker build -t $AUTH_IMAGE .
+  - echo "Loading image into minikube..."
+  - docker save $AUTH_IMAGE | docker exec -i minikube docker load
+  - echo "Cleaning up dangling image to save space..."
+  - docker exec -i minikube docker image prune -f
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - auth/**/*
-
+  - if: $CI_PIPELINE_SOURCE == "web"
 build-gateway:
   stage: build
   image: docker:latest
   script:
-    - echo "Building gateway Image..."
-    - cd gateway
-    - docker build -t $GATEWAY_IMAGE .
-    - echo "Loading image into Minikube"
-    - docker save $GATEWAY_IMAGE | docker exec -i minikube docker load
-    - echo "Cleaning up -i minikube docker image prune -f"
+  - echo "Building gateway Image..."
+  - cd gateway
+  - docker build -t $GATEWAY_IMAGE .
+  - echo "Loading image into Minikube"
+  - docker save $GATEWAY_IMAGE | docker exec -i minikube docker load
+  - echo "Cleaning up -i minikube docker image prune -f"
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - gateway/**/*
-
+  - if: $CI_PIPELINE_SOURCE == "web"
 build-llm:
   stage: build
   image: docker:latest
   script:
-    - echo "Building LLM Image..."
-    - cd llm
-    - docker build -t $LLM_IMAGE .
-    - echo "Loading image into Minikube..."
-    - docker save $LLM_IMAGE | docker exec -i minikube docker load
-    - echo "Cleaning up dangling images to save space..."
-    - docker exec -i minikube docker image prune -f 
+  - echo "Building LLM Image..."
+  - cd llm
+  - docker build -t $LLM_IMAGE .
+  - echo "Loading image into Minikube..."
+  - docker save $LLM_IMAGE | docker exec -i minikube docker load
+  - echo "Cleaning up dangling images to save space..."
+  - docker exec -i minikube docker image prune -f
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - llm/**/*
-
+  - if: $CI_PIPELINE_SOURCE == "web"
 deploy-all:
   stage: deploy
   image: docker:latest
   script:
-    - echo "Deploying everything using Helm..."
-    # 1. Download Helm on the runner (which has internet) and inject it into minikube
-    - apk add --no-cache curl tar
-    - curl -fsSL -o helm.tar.gz https://get.helm.sh/helm-v3.13.0-linux-amd64.tar.gz
-    - tar -zxvf helm.tar.gz
-    - docker cp linux-amd64/helm minikube:/usr/local/bin/helm
-    # 2. Copy the helm chart to the minikube container
-    - docker cp todo-app minikube:/todo-app
-    # 3. Run helm upgrade inside minikube
-    - docker exec minikube sh -c "/usr/local/bin/helm upgrade --install k8s-todo /todo-app --kubeconfig /var/lib/minikube/kubeconfig --set frontend.image.tag=$CI_COMMIT_SHORT_SHA --set backend.image.tag=$CI_COMMIT_SHORT_SHA --set auth.image.tag=$CI_COMMIT_SHORT_SHA --set gateway.image.tag=$CI_COMMIT_SHORT_SHA --set llm.image.tag=$CI_COMMIT_SHORT_SHA"
+  - echo "Deploying everything using Helm..."
+  - apk add --no-cache curl tar
+  - curl -fsSL -o helm.tar.gz https://get.helm.sh/helm-v3.13.0-linux-amd64.tar.gz
+  - tar -zxvf helm.tar.gz
+  - docker cp linux-amd64/helm minikube:/usr/local/bin/helm
+  - docker cp todo-app minikube:/todo-app
+  - docker exec minikube sh -c "/usr/local/bin/helm upgrade --install k8s-todo /todo-app
+    --kubeconfig /var/lib/minikube/kubeconfig --set frontend.image.tag=$CI_COMMIT_SHORT_SHA
+    --set backend.image.tag=$CI_COMMIT_SHORT_SHA --set auth.image.tag=$CI_COMMIT_SHORT_SHA
+    --set gateway.image.tag=$CI_COMMIT_SHORT_SHA --set llm.image.tag=$CI_COMMIT_SHORT_SHA"
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - frontend/**/*
-      - backend/**/*
-      - auth/**/*
-      - gateway/**/*
-      - llm/**/*
-      - todo-app/**/*
-
+  - if: $CI_PIPELINE_SOURCE == "web"
 smoke-test-all:
   stage: smoke-test
   image: docker:latest
   script:
-    - echo "Testing if all services are live.."
-    # Run curl directly inside the Minikube container to bypass docker-in-docker network isolation
-    - 'docker exec minikube curl -f -H "Host: todo.app.com" http://localhost/api/health || exit 1'
+  - echo "Testing if all services are live.."
+  - 'docker exec minikube curl -f -H "Host: todo.app.com" http://localhost/api/health
+    || exit 1'
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
-    - changes:
-      - backend/**/*
-      - auth/**/*
-      - gateway/**/*
-      - llm/**/*
+  - if: $CI_PIPELINE_SOURCE == "web"

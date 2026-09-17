@@ -43,6 +43,30 @@ const SERVICES = {
     llm: process.env.LLM_SERVICE_URL || 'http://localhost:5003',
 };
 
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+    try{
+        const [authHealth, backendHealth, llmHealth ] = await Promise.allSettled([
+            axios.get(`${SERVICES.auth}/api/health`),
+            axios.get(`${SERVICES.backend}/api/health`),
+            axios.get(`${SERVICES.llm}/api/ai/health`)
+        ])
+
+        const isHealthy = (result) => result.status === 'fulfilled' && result.value.status === 200;
+        const healthStatus = {
+            gateway: 'ok',
+            auth: isHealthy(authHealth) ? 'ok' : 'down',
+            backend: isHealthy(backendHealth) ? 'ok' : 'down',
+            llm: isHealthy(llmHealth) ? 'ok' : 'down'
+        }
+        const overallStatus = Object.values(healthStatus).includes('down') ? 503 : 200;
+        res.status(overallStatus).json(healthStatus)
+    }catch(error){
+        res.status(500).json({ status: 'Gateway error' });
+    }
+});
+
+
 // Auth Service Proxy
 app.use(createProxyMiddleware({
     target: SERVICES.auth,
@@ -73,28 +97,7 @@ app.use(createProxyMiddleware({
     pathFilter: "/api/ai"
 }));
 
-// Health check endpoint
-app.get('/api/health', async (req, res) => {
-    try{
-        const [authHealth, backendHealth, llmHealth ] = await Promise.allSettled([
-            axios.get(`${SERVICES.auth}/api/health`),
-            axios.get(`${SERVICES.backend}/api/health`),
-            axios.get(`${SERVICES.llm}/api/ai/health`)
-        ])
 
-        const isHealthy = (result) => result.status === 'fulfilled' && result.value.status === 200;
-        const healthStatus = {
-            gateway: 'ok',
-            auth: isHealthy(authHealth) ? 'ok' : 'down',
-            backend: isHealthy(backendHealth) ? 'ok' : 'down',
-            llm: isHealthy(llmHealth) ? 'ok' : 'down'
-        }
-        const overallStatus = Object.values(healthStatus).includes('down') ? 503 : 200;
-        res.status(overallStatus).json(healthStatus)
-    }catch(error){
-        res.status(500).json({ status: 'Gateway error' });
-    }
-});
 
 const server = http.createServer(app);
 

@@ -1,4 +1,3 @@
-import { getToken } from './auth';
 
 const BASE_URL = '/api/todos';
 

@@ -3,6 +3,9 @@ const router = express.Router();
 const Project = require('../models/Project');
 const Todo = require('../models/Todo');
 const logger = require('../utils/logger');
+const protect = require('../middleware/protect');
+
+router.use(protect);
 
 // GET all projects for user
 router.get('/', async (req, res, next) => {

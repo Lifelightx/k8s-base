@@ -89,11 +89,11 @@ export default function ComposeTodo({ onAdd }) {
       </div>
 
       {/* Tags Row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem 0 1rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.125rem', flexWrap: 'wrap' }}>
         {tags.map(t => (
-          <span key={t} style={{ background: '#e0e7ff', color: '#4338ca', padding: '0.2rem 0.5rem', borderRadius: '12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-            {t}
-            <button type="button" onClick={() => removeTag(t)} style={{ background: 'none', border: 'none', color: '#4338ca', cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>&times;</button>
+          <span key={t} style={{ background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            #{t}
+            <button type="button" onClick={() => removeTag(t)} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>&times;</button>
           </span>
         ))}
         <input 
@@ -102,7 +102,7 @@ export default function ComposeTodo({ onAdd }) {
           onChange={(e) => setTagInput(e.target.value)}
           onKeyDown={handleTagKeyDown}
           placeholder="Add a tag (press Enter)"
-          style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem', border: 'none', background: 'transparent', outline: 'none' }}
+          style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem', border: 'none', background: 'transparent', outline: 'none', color: 'var(--text)' }}
         />
       </div>
 
@@ -123,35 +123,35 @@ export default function ComposeTodo({ onAdd }) {
           </div>
         </div>
         
-        <div style={{ display:'flex', alignItems:'center', gap:'1rem', paddingLeft: '1rem' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:'1rem', paddingLeft: '1rem', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span className="priority-label">Due</span>
             <input 
               type="datetime-local" 
               value={dueDate} 
               onChange={(e) => setDueDate(e.target.value)} 
-              style={{ fontSize: '0.85rem', padding: '0.25rem 0.5rem', borderRadius: '4px', border: '1px solid #d1d5db', background: 'transparent' }}
+              style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', outline: 'none' }}
             />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <input 
               type="checkbox" 
               id="reminders-check-compose"
               checked={remindersEnabled} 
               onChange={(e) => setRemindersEnabled(e.target.checked)}
               disabled={!dueDate}
-              style={{ cursor: dueDate ? 'pointer' : 'not-allowed' }}
+              style={{ cursor: dueDate ? 'pointer' : 'not-allowed', accentColor: 'var(--accent)' }}
             />
-            <label htmlFor="reminders-check-compose" style={{ fontSize: '0.85rem', color: dueDate ? '#4b5563' : '#9ca3af', cursor: dueDate ? 'pointer' : 'not-allowed' }}>
+            <label htmlFor="reminders-check-compose" style={{ fontSize: '0.8rem', color: dueDate ? 'var(--text)' : 'var(--text3)', cursor: dueDate ? 'pointer' : 'not-allowed' }}>
               Reminders
             </label>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem' }}>
             <span className="priority-label">Recurrence</span>
             <select
               value={recurrence}
               onChange={(e) => setRecurrence(e.target.value)}
-              style={{ fontSize: '0.85rem', padding: '0.25rem 0.5rem', borderRadius: '4px', border: '1px solid #d1d5db', background: 'transparent' }}
+              style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', outline: 'none' }}
             >
               <option value="none">None</option>
               <option value="daily">Daily</option>

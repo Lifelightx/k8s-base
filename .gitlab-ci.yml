@@ -112,6 +112,7 @@ deploy-all:
   - curl -fsSL -o helm.tar.gz https://get.helm.sh/helm-v3.13.0-linux-amd64.tar.gz
   - tar -zxvf helm.tar.gz
   - docker cp linux-amd64/helm minikube:/usr/local/bin/helm
+  - docker exec minikube rm -rf /todo-app
   - docker cp todo-app minikube:/todo-app
   - docker exec minikube sh -c "/usr/local/bin/helm upgrade --install k8s-todo /todo-app
     --kubeconfig /var/lib/minikube/kubeconfig --set frontend.image.tag=$CI_COMMIT_SHORT_SHA

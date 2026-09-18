@@ -50,10 +50,12 @@ export default function ReprioritizeModal({ todos, onClose, onApplied }) {
         {suggestions.length === 0 ? (
           <div className="intro">
             <p>Let AI analyze your active tasks and suggest optimal priorities based on due dates and context.</p>
-            <button className="btn-primary" onClick={handleFetchSuggestions} disabled={loading}>
-              {loading ? 'Analyzing...' : 'Generate Suggestions'}
-            </button>
-            <button className="btn-secondary" onClick={onClose} style={{marginLeft: '1rem'}}>Cancel</button>
+            <div className="intro-actions">
+              <button className="btn-primary" onClick={handleFetchSuggestions} disabled={loading}>
+                {loading ? 'Analyzing...' : 'Generate Suggestions'}
+              </button>
+              <button className="btn-secondary" onClick={onClose}>Cancel</button>
+            </div>
           </div>
         ) : (
           <div className="suggestions-list">

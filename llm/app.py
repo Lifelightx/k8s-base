@@ -104,7 +104,34 @@ Todos:
             )
             response.raise_for_status()
             data = response.json()
-            return {"suggestions": json.loads(data.get("response", "[]").strip())}
+            resp_text = data.get("response", "").strip()
+            if not resp_text:
+                return {"suggestions": []}
+            
+            # Remove markdown code blocks if present
+            if resp_text.startswith("```json"):
+                resp_text = resp_text[7:]
+            elif resp_text.startswith("```"):
+                resp_text = resp_text[3:]
+            if resp_text.endswith("```"):
+                resp_text = resp_text[:-3]
+            resp_text = resp_text.strip()
+
+            try:
+                suggestions = json.loads(resp_text)
+            except json.JSONDecodeError:
+                # Fallback: extract array using regex
+                import re
+                match = re.search(r'\[.*\]', resp_text, re.DOTALL)
+                if match:
+                    try:
+                        suggestions = json.loads(match.group(0))
+                    except:
+                        suggestions = []
+                else:
+                    suggestions = []
+                    
+            return {"suggestions": suggestions}
     except Exception as e:
         print(f"Error calling LLM provider: {e}")
         raise HTTPException(status_code=500, detail="Failed to prioritize")

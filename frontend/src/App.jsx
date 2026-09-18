@@ -339,7 +339,7 @@ export default function App() {
         setActiveProjectId={setActiveProjectId} 
       />
       <div className="flex-1 overflow-y-auto flex justify-center px-4 pb-16">
-        <div className="w-full max-w-[620px] flex flex-col gap-0 pt-14">
+        <div className="w-full max-w-5xl flex flex-col gap-0 pt-14">
 
       {/* Header */}
       <header className="app-header">

@@ -35,7 +35,7 @@ export default function TodoList({ todos, loading, filter, onToggle, onDelete, o
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3" role="list">
+    <div className="columns-1 sm:columns-2 lg:columns-3 gap-4" role="list">
       {todos.map((t) => (
         <TodoItem
           key={t._id}

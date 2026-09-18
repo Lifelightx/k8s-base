@@ -32,7 +32,7 @@ export default function TodoItem({ todo, onToggle, onDelete, onClick }) {
 
   return (
     <div
-      className={`relative bg-surface border border-border rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:border-border2 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] group ${
+      className={`relative break-inside-avoid mb-4 bg-surface border border-border rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:border-border2 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] group ${
         todo.completed ? 'opacity-60' : ''
       }`}
       style={{

@@ -2274,3 +2274,53 @@ kbd {
   background-color: var(--accent) !important;
   color: #0a1a10 !important;
 }
+
+/* ══════════ TAGS FILTER ══════════ */
+.tags-filter-container {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  scrollbar-width: none; /* Firefox */
+}
+
+.tags-filter-container::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.tags-label {
+  font-size: 0.75rem;
+  color: var(--text3);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-right: 0.5rem;
+}
+
+.tag-btn {
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text2);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--t) var(--ease);
+}
+
+.tag-btn:hover {
+  background: var(--surface3);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.tag-btn.active {
+  background: rgba(231, 76, 60, 0.15); /* Accent bg with slightly higher opacity */
+  color: var(--accent2);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.1);
+}

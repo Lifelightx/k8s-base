@@ -484,11 +484,11 @@ export default function App() {
 
       {/* Tag Filters */}
       {availableTags.length > 0 && (
-        <div style={{ display: 'flex', gap: '0.5rem', padding: '0.5rem 1rem', overflowX: 'auto', borderBottom: '1px solid #f3f4f6' }}>
-          <span style={{ fontSize: '0.8rem', color: '#6b7280', alignSelf: 'center', fontWeight: '500' }}>Tags:</span>
+        <div className="tags-filter-container">
+          <span className="tags-label">Tags:</span>
           <button 
             onClick={() => setTagFilter(null)}
-            style={{ padding: '0.2rem 0.6rem', borderRadius: '12px', border: '1px solid #d1d5db', background: tagFilter === null ? '#4f46e5' : 'transparent', color: tagFilter === null ? 'white' : '#374151', fontSize: '0.75rem', cursor: 'pointer' }}
+            className={`tag-btn ${tagFilter === null ? 'active' : ''}`}
           >
             All
           </button>
@@ -496,7 +496,7 @@ export default function App() {
             <button 
               key={tag}
               onClick={() => setTagFilter(tag)}
-              style={{ padding: '0.2rem 0.6rem', borderRadius: '12px', border: '1px solid #d1d5db', background: tagFilter === tag ? '#4f46e5' : 'transparent', color: tagFilter === tag ? 'white' : '#374151', fontSize: '0.75rem', cursor: 'pointer' }}
+              className={`tag-btn ${tagFilter === tag ? 'active' : ''}`}
             >
               #{tag}
             </button>

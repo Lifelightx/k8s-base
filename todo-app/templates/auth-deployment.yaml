@@ -27,14 +27,41 @@ spec:
             value: "5002"
           - name: MONGO_URI
             valueFrom:
-              configMapKeyRef:
-                name: todo-config
+              secretKeyRef:
+                name: todo-secret
                 key: MONGO_URI
           - name: JWT_SECRETE
             valueFrom:
               secretKeyRef:
                 name: todo-secret
                 key: JWT_SECRETE
+        startupProbe:
+          httpGet:
+            path: /api/health
+            port: 5002
+          failureThreshold: 30
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 5002
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 5002
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
 
 ---
 apiVersion: v1

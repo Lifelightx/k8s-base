@@ -28,8 +28,8 @@ spec:
               value: "5001"
             - name: MONGO_URI
               valueFrom:
-                configMapKeyRef:
-                  name: todo-config
+                secretKeyRef:
+                  name: todo-secret
                   key: MONGO_URI
             - name: JWT_SECRETE
               valueFrom:

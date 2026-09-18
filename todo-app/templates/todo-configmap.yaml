@@ -4,7 +4,6 @@ metadata:
   name: todo-config 
 
 data:
-  MONGO_URI: "mongodb://mongodb:27017/todoapp"
   AUTH_SERVICE_URL: "http://todo-auth:5002"
   BACKEND_SERVICE_URL: "http://todo-backend:5001"
   LLM_SERVICE_URL: "http://todo-llm:5003"

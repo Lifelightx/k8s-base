@@ -302,12 +302,22 @@ export default function App() {
 
   if (page === PAGES.dashboard) {
     return (
-      <div className="flex h-screen bg-white">
-        <div style={{ padding: '1rem', flex: 1, overflowY: 'auto' }}>
-          <button className="btn-secondary" style={{marginBottom: '1rem'}} onClick={() => setPage(PAGES.app)}>
-            ← Back to Tasks
-          </button>
-          <DashboardPage />
+      <div className="flex w-full h-screen overflow-hidden bg-bg">
+        <Sidebar 
+          projects={projects} 
+          setProjects={setProjects}
+          activeProjectId={activeProjectId} 
+          setActiveProjectId={setActiveProjectId} 
+        />
+        <div className="flex-1 overflow-y-auto flex justify-center px-4 pb-16">
+          <div className="w-full max-w-5xl flex flex-col gap-6 pt-14">
+            <button 
+              className="w-fit text-sm font-medium text-text2 hover:text-text bg-surface border border-border px-4 py-2 rounded-xl transition-all hover:bg-surface2"
+              onClick={() => setPage(PAGES.app)}>
+              ← Back to Tasks
+            </button>
+            <DashboardPage />
+          </div>
         </div>
       </div>
     );

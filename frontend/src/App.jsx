@@ -331,14 +331,15 @@ export default function App() {
 
   /* ── Notes App ── */
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
+    <div className="app-container">
       <Sidebar 
         projects={projects} 
         setProjects={setProjects}
         activeProjectId={activeProjectId} 
         setActiveProjectId={setActiveProjectId} 
       />
-      <div className="app flex-1 overflow-y-auto">
+      <div className="main-content">
+        <div className="app">
 
       {/* Header */}
       <header className="app-header">
@@ -528,6 +529,7 @@ export default function App() {
       )}
 
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
+      </div>
       </div>
     </div>
   );

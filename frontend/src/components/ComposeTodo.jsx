@@ -59,7 +59,7 @@ export default function ComposeTodo({ onAdd }) {
 
   return (
     <form
-      className="bg-surface border border-border rounded-xl mb-6 overflow-hidden transition-all duration-200 focus-within:border-border2 focus-within:shadow-[0_0_0_1px_rgba(46,61,50,0.8)]"
+      className="bg-surface border border-border rounded-xl mb-6 transition-all duration-200 focus-within:border-border2 focus-within:shadow-[0_0_0_1px_rgba(46,61,50,0.8)]"
       onSubmit={submit}
     >
       {/* Main input row */}

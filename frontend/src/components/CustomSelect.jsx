@@ -21,7 +21,7 @@ export default function CustomSelect({ value, onChange, options, className = '' 
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md border border-border bg-surface2 text-text outline-none focus:border-accent transition-colors duration-200 text-xs ${className}`}
+        className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg border border-border/50 bg-surface hover:bg-surface2 text-text outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200 text-xs shadow-sm ${className}`}
       >
         <span>{selectedOption?.label}</span>
         <svg
@@ -40,7 +40,7 @@ export default function CustomSelect({ value, onChange, options, className = '' 
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-1 min-w-[120px] rounded-md border border-border bg-surface2 shadow-[0_4px_12px_rgba(0,0,0,0.5)] ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
+        <div className="absolute z-50 mt-1.5 min-w-[130px] rounded-lg border border-border/50 bg-[#121a16] shadow-xl ring-1 ring-black/5 focus:outline-none overflow-hidden backdrop-blur-md">
           <div className="py-1">
             {options.map((option) => (
               <button
@@ -49,10 +49,10 @@ export default function CustomSelect({ value, onChange, options, className = '' 
                   onChange(option.value);
                   setIsOpen(false);
                 }}
-                className={`group flex w-full items-center px-3 py-1.5 text-xs transition-colors duration-150 ${
+                className={`group flex w-full items-center px-3 py-2 text-xs transition-colors duration-150 ${
                   value === option.value
-                    ? 'bg-accent/20 text-accent font-medium'
-                    : 'text-text hover:bg-surface3'
+                    ? 'bg-accent/10 text-accent font-medium'
+                    : 'text-text2 hover:bg-surface3 hover:text-text'
                 }`}
               >
                 {option.label}

@@ -12,7 +12,9 @@ variables:
   AUTH_IMAGE: k8s-todo-auth:$CI_COMMIT_SHORT_SHA
   GATEWAY_IMAGE: k8s-todo-gateway:$CI_COMMIT_SHORT_SHA
   LLM_IMAGE: k8s-todo-llm:$CI_COMMIT_SHORT_SHA
+  HELM_KUBECONFIG: /var/lib/minikube/kubeconfig
 
+# ── Lint ──────────────────────────────────────────────
 lint-backend:
   stage: lint
   image: node:22-alpine
@@ -25,6 +27,7 @@ lint-backend:
         - backend/**/*
         - .gitlab-ci.yml
 
+# ── Security ──────────────────────────────────────────
 security-audit-backend:
   stage: security
   image: node:22-alpine
@@ -37,6 +40,7 @@ security-audit-backend:
         - backend/**/*
         - .gitlab-ci.yml
 
+# ── Test ──────────────────────────────────────────────
 test-backend:
   stage: test
   image: node:22-alpine
@@ -50,6 +54,7 @@ test-backend:
         - backend/**/*
         - .gitlab-ci.yml
 
+# ── Build ─────────────────────────────────────────────
 build-frontend:
   stage: build
   image: docker:latest
@@ -59,7 +64,6 @@ build-frontend:
     - docker build -t $FRONTEND_IMAGE .
     - echo "Loading image into Minikube..."
     - docker save $FRONTEND_IMAGE | docker exec -i minikube docker load
-    - echo "Cleaning up dangling images to save space..."
     - docker exec -i minikube docker image prune -f
   rules:
     - changes:
@@ -75,7 +79,6 @@ build-backend:
     - docker build -t $BACKEND_IMAGE .
     - echo "Loading image into Minikube..."
     - docker save $BACKEND_IMAGE | docker exec -i minikube docker load
-    - echo "Cleaning up dangling images to save space..."
     - docker exec -i minikube docker image prune -f
   rules:
     - changes:
@@ -91,7 +94,6 @@ build-auth:
     - docker build -t $AUTH_IMAGE .
     - echo "Loading image into minikube..."
     - docker save $AUTH_IMAGE | docker exec -i minikube docker load
-    - echo "Cleaning up dangling images to save space..."
     - docker exec -i minikube docker image prune -f
   rules:
     - changes:
@@ -102,12 +104,11 @@ build-gateway:
   stage: build
   image: docker:latest
   script:
-    - echo "Building gateway Image..."
+    - echo "Building Gateway Image..."
     - cd gateway
     - docker build -t $GATEWAY_IMAGE .
     - echo "Loading image into Minikube..."
     - docker save $GATEWAY_IMAGE | docker exec -i minikube docker load
-    - echo "Cleaning up dangling images to save space..."
     - docker exec -i minikube docker image prune -f
   rules:
     - changes:
@@ -123,29 +124,98 @@ build-llm:
     - docker build -t $LLM_IMAGE .
     - echo "Loading image into Minikube..."
     - docker save $LLM_IMAGE | docker exec -i minikube docker load
-    - echo "Cleaning up dangling images to save space..."
     - docker exec -i minikube docker image prune -f
   rules:
     - changes:
         - llm/**/*
         - .gitlab-ci.yml
 
-deploy-all:
+# ── Deploy (per-service) ──────────────────────────────
+# Uses --reuse-values so only the changed service's image tag is updated.
+# The Helm chart must already be installed once (first deploy uses todo-app chart).
+
+.helm_setup: &helm_setup
+  - apk add --no-cache curl tar
+  - curl -fsSL -o helm.tar.gz https://get.helm.sh/helm-v3.13.0-linux-amd64.tar.gz
+  - tar -zxvf helm.tar.gz
+  - docker cp linux-amd64/helm minikube:/usr/local/bin/helm
+
+deploy-frontend:
   stage: deploy
   image: docker:latest
+  needs: [build-frontend]
   script:
-    - echo "Deploying everything using Helm..."
-    - apk add --no-cache curl tar
-    - curl -fsSL -o helm.tar.gz https://get.helm.sh/helm-v3.13.0-linux-amd64.tar.gz
-    - tar -zxvf helm.tar.gz
-    - docker cp linux-amd64/helm minikube:/usr/local/bin/helm
-    - docker exec minikube rm -rf /todo-app
-    - docker cp todo-app minikube:/todo-app
-    - docker exec minikube sh -c "/usr/local/bin/helm upgrade --install k8s-todo /todo-app
-      --kubeconfig /var/lib/minikube/kubeconfig --set frontend.image.tag=$CI_COMMIT_SHORT_SHA
-      --set backend.image.tag=$CI_COMMIT_SHORT_SHA --set auth.image.tag=$CI_COMMIT_SHORT_SHA
-      --set gateway.image.tag=$CI_COMMIT_SHORT_SHA --set llm.image.tag=$CI_COMMIT_SHORT_SHA"
+    - *helm_setup
+    - echo "Deploying frontend only..."
+    - docker exec minikube sh -c "/usr/local/bin/helm upgrade k8s-todo /todo-app
+      --kubeconfig $HELM_KUBECONFIG --reuse-values
+      --set frontend.image.tag=$CI_COMMIT_SHORT_SHA"
+  rules:
+    - changes:
+        - frontend/**/*
+        - .gitlab-ci.yml
 
+deploy-backend:
+  stage: deploy
+  image: docker:latest
+  needs: [build-backend]
+  script:
+    - *helm_setup
+    - echo "Deploying backend only..."
+    - docker exec minikube sh -c "/usr/local/bin/helm upgrade k8s-todo /todo-app
+      --kubeconfig $HELM_KUBECONFIG --reuse-values
+      --set backend.image.tag=$CI_COMMIT_SHORT_SHA"
+  rules:
+    - changes:
+        - backend/**/*
+        - .gitlab-ci.yml
+
+deploy-auth:
+  stage: deploy
+  image: docker:latest
+  needs: [build-auth]
+  script:
+    - *helm_setup
+    - echo "Deploying auth only..."
+    - docker exec minikube sh -c "/usr/local/bin/helm upgrade k8s-todo /todo-app
+      --kubeconfig $HELM_KUBECONFIG --reuse-values
+      --set auth.image.tag=$CI_COMMIT_SHORT_SHA"
+  rules:
+    - changes:
+        - auth/**/*
+        - .gitlab-ci.yml
+
+deploy-gateway:
+  stage: deploy
+  image: docker:latest
+  needs: [build-gateway]
+  script:
+    - *helm_setup
+    - echo "Deploying gateway only..."
+    - docker exec minikube sh -c "/usr/local/bin/helm upgrade k8s-todo /todo-app
+      --kubeconfig $HELM_KUBECONFIG --reuse-values
+      --set gateway.image.tag=$CI_COMMIT_SHORT_SHA"
+  rules:
+    - changes:
+        - gateway/**/*
+        - .gitlab-ci.yml
+
+deploy-llm:
+  stage: deploy
+  image: docker:latest
+  needs: [build-llm]
+  script:
+    - *helm_setup
+    - echo "Deploying llm only..."
+    - docker exec minikube sh -c "/usr/local/bin/helm upgrade k8s-todo /todo-app
+      --kubeconfig $HELM_KUBECONFIG --reuse-values
+      --set llm.image.tag=$CI_COMMIT_SHORT_SHA"
+  rules:
+    - changes:
+        - llm/**/*
+        - .gitlab-ci.yml
+
+# ── Smoke Test ────────────────────────────────────────
 smoke-test-all:
   stage: smoke-test
   image: docker:latest

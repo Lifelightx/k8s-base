@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 
 function timeAgo(d) {
   const s = (Date.now() - new Date(d)) / 1000;
@@ -8,16 +8,16 @@ function timeAgo(d) {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
-const P_COLORS = {
-  high:   { bg: 'rgba(224,82,82,0.12)',   border: '#e05252', text: '#e05252', label: 'High' },
-  medium: { bg: 'rgba(217,119,6,0.12)',   border: '#d97706', text: '#d97706', label: 'Medium' },
-  low:    { bg: 'rgba(46,204,113,0.12)',   border: '#2ecc71', text: '#2ecc71', label: 'Low' },
+const P = {
+  high:   { bg: 'rgba(224,82,82,0.12)',  border: '#e05252', text: '#e05252', label: 'High'   },
+  medium: { bg: 'rgba(217,119,6,0.12)',  border: '#d97706', text: '#d97706', label: 'Medium' },
+  low:    { bg: 'rgba(46,204,113,0.12)', border: '#2ecc71', text: '#2ecc71', label: 'Low'    },
 };
 
 export default function TodoItem({ todo, onToggle, onDelete, onClick }) {
   const [leaving, setLeaving] = useState(false);
   const p = todo.priority || 'medium';
-  const pc = P_COLORS[p];
+  const pc = P[p];
 
   const handleDelete = (e) => {
     e.stopPropagation();
@@ -32,27 +32,30 @@ export default function TodoItem({ todo, onToggle, onDelete, onClick }) {
 
   return (
     <div
-      className={`task-card${todo.completed ? ' is-done' : ''}${leaving ? ' leaving' : ''}`}
+      className={`relative bg-surface border border-border rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:border-border2 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.2)] group ${
+        todo.completed ? 'opacity-60' : ''
+      }`}
       style={{
-        '--p-border': pc.border,
-        '--p-bg': pc.bg,
-        opacity: leaving ? 0 : 1,
-        transform: leaving ? 'scale(0.95)' : 'scale(1)',
-        transition: 'opacity 0.25s ease, transform 0.25s ease',
-        cursor: 'pointer',
+        opacity: leaving ? 0 : undefined,
+        transform: leaving ? 'scale(0.95)' : undefined,
+        transition: leaving ? 'opacity 0.25s ease, transform 0.25s ease' : undefined,
+        borderLeftColor: pc.border,
+        borderLeftWidth: '3px',
       }}
       onClick={() => onClick(todo)}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && onClick(todo)}
     >
-      {/* Priority top strip */}
-      <div className="task-card-strip" style={{ background: pc.border }} />
-
       {/* Header row */}
-      <div className="task-card-header">
+      <div className="flex items-center justify-between px-3 pt-3 pb-1">
+        {/* Checkbox */}
         <div
-          className={`task-check${todo.completed ? ' done' : ''}`}
+          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 cursor-pointer shrink-0 ${
+            todo.completed
+              ? 'bg-[#2ecc71] border-[#2ecc71]'
+              : 'border-border2 hover:border-[#2ecc71]'
+          }`}
           role="checkbox"
           aria-checked={todo.completed}
           tabIndex={0}
@@ -67,8 +70,9 @@ export default function TodoItem({ todo, onToggle, onDelete, onClick }) {
           )}
         </div>
 
+        {/* Delete button */}
         <button
-          className="icon-btn red task-card-delete"
+          className="w-6 h-6 flex items-center justify-center rounded text-text3 bg-transparent border-none cursor-pointer opacity-0 group-hover:opacity-100 transition-all duration-200 hover:text-red hover:bg-redBg"
           onClick={handleDelete}
           aria-label="Delete"
           title="Delete"
@@ -82,15 +86,17 @@ export default function TodoItem({ todo, onToggle, onDelete, onClick }) {
       </div>
 
       {/* Body */}
-      <div className="task-card-body">
-        <p className="task-card-title">{todo.text}</p>
+      <div className="px-3 py-1">
+        <p className={`text-sm font-medium leading-snug ${todo.completed ? 'line-through text-text3' : 'text-text'}`}>
+          {todo.text}
+        </p>
         {todo.description && (
-          <p className="task-card-desc">{todo.description}</p>
+          <p className="text-xs text-text2 mt-1 leading-relaxed line-clamp-2">{todo.description}</p>
         )}
         {todo.tags && todo.tags.length > 0 && (
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+          <div className="flex gap-1.5 flex-wrap mt-2">
             {todo.tags.map(t => (
-              <span key={t} style={{ background: '#f3f4f6', color: '#4b5563', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.7rem' }}>
+              <span key={t} className="text-[0.65rem] px-1.5 py-0.5 rounded bg-surface2 border border-border text-text2">
                 #{t}
               </span>
             ))}
@@ -99,27 +105,26 @@ export default function TodoItem({ todo, onToggle, onDelete, onClick }) {
       </div>
 
       {/* Footer */}
-      <div className="task-card-footer">
-        <span className="task-time">{timeAgo(todo.createdAt)}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span className="task-time">{timeAgo(todo.createdAt)}</span>
+      <div className="flex items-center justify-between px-3 py-2 mt-1">
+        <span className="text-[0.65rem] text-text3">{timeAgo(todo.createdAt)}</span>
+        <div className="flex items-center gap-2">
           {todo.project && todo.project !== 'Inbox' && (
-            <span style={{ fontSize: '0.7rem', color: '#6b7280', background: '#f3f4f6', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>
+            <span className="text-[0.65rem] text-text3 bg-surface2 border border-border px-1.5 py-0.5 rounded">
               📁 {todo.project}
             </span>
           )}
           {todo.subtasks && todo.subtasks.length > 0 && (
-            <span style={{ fontSize: '0.7rem', color: '#6b7280' }}>
+            <span className="text-[0.65rem] text-text3">
               ✓ {todo.subtasks.filter(s => s.completed).length}/{todo.subtasks.length}
             </span>
           )}
+          <span
+            className="text-[0.7rem] px-2 py-0.5 rounded-full font-semibold capitalize"
+            style={{ background: pc.bg, color: pc.text, border: `1px solid ${pc.border}` }}
+          >
+            {pc.label}
+          </span>
         </div>
-        <span
-          className="task-card-priority"
-          style={{ background: pc.bg, color: pc.text, border: `1px solid ${pc.border}` }}
-        >
-          {pc.label}
-        </span>
       </div>
     </div>
   );

@@ -331,15 +331,15 @@ export default function App() {
 
   /* ── Notes App ── */
   return (
-    <div className="app-container">
+    <div className="flex w-full h-screen overflow-hidden bg-bg">
       <Sidebar 
         projects={projects} 
         setProjects={setProjects}
         activeProjectId={activeProjectId} 
         setActiveProjectId={setActiveProjectId} 
       />
-      <div className="main-content">
-        <div className="app">
+      <div className="flex-1 overflow-y-auto flex justify-center px-4 pb-16">
+        <div className="w-full max-w-[620px] flex flex-col gap-0 pt-14">
 
       {/* Header */}
       <header className="app-header">

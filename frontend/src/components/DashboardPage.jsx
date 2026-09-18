@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchAnalytics, fetchStats } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import './DashboardPage.css';
 
 export default function DashboardPage() {
   const [data, setData] = useState([]);
@@ -13,34 +12,38 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="dashboard-container">
-      <h2>Progress & Analytics</h2>
-      
+    <div className="w-full py-8 flex flex-col gap-8">
+      <h2 className="text-2xl font-bold text-text">Progress &amp; Analytics</h2>
+
       {stats && (
-        <div className="stats-cards">
-          <div className="card">
-            <h3>{stats.total}</h3>
-            <p>Total Tasks</p>
-          </div>
-          <div className="card">
-            <h3>{stats.completed}</h3>
-            <p>Completed</p>
-          </div>
-          <div className="card">
-            <h3>{stats.active}</h3>
-            <p>Active</p>
-          </div>
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: 'Total Tasks', value: stats.total },
+            { label: 'Completed', value: stats.completed },
+            { label: 'Active', value: stats.active },
+          ].map(({ label, value }) => (
+            <div
+              key={label}
+              className="bg-surface border border-border rounded-xl p-6 flex flex-col items-center gap-1 hover:border-border2 hover:-translate-y-0.5 transition-all duration-200"
+            >
+              <h3 className="text-3xl font-extrabold text-accent">{value}</h3>
+              <p className="text-sm text-text2">{label}</p>
+            </div>
+          ))}
         </div>
       )}
 
-      <div className="chart-container">
-        <h3>Tasks Completed (Last 30 Days)</h3>
-        <ResponsiveContainer width="100%" height={300}>
+      <div className="bg-surface border border-border rounded-xl p-6">
+        <h3 className="text-base font-semibold text-text mb-6">Tasks Completed (Last 30 Days)</h3>
+        <ResponsiveContainer width="100%" height={280}>
           <BarChart data={data}>
-            <XAxis dataKey="_id" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+            <XAxis dataKey="_id" stroke="#4d6659" tick={{ fontSize: 11 }} />
+            <YAxis allowDecimals={false} stroke="#4d6659" tick={{ fontSize: 11 }} />
+            <Tooltip
+              contentStyle={{ background: '#121a16', border: '1px solid rgba(46,61,50,0.8)', borderRadius: '8px', color: '#edf5f0' }}
+              cursor={{ fill: 'rgba(231,76,60,0.05)' }}
+            />
+            <Bar dataKey="count" fill="#e74c3c" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

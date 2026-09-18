@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 
-
 export default function ComposeTodo({ onAdd }) {
   const [text, setText]         = useState('');
   const [priority, setPriority] = useState('medium');
@@ -27,16 +26,12 @@ export default function ComposeTodo({ onAdd }) {
     if (e.key === 'Enter') {
       e.preventDefault();
       const newTag = tagInput.trim().toLowerCase();
-      if (newTag && !tags.includes(newTag)) {
-        setTags([...tags, newTag]);
-      }
+      if (newTag && !tags.includes(newTag)) setTags([...tags, newTag]);
       setTagInput('');
     }
   };
 
-  const removeTag = (tagToRemove) => {
-    setTags(tags.filter(t => t !== tagToRemove));
-  };
+  const removeTag = (tagToRemove) => setTags(tags.filter(t => t !== tagToRemove));
 
   const submit = async (e) => {
     e?.preventDefault();
@@ -45,22 +40,32 @@ export default function ComposeTodo({ onAdd }) {
     setLoading(true);
     try {
       await onAdd(val, priority, dueDate || null, remindersEnabled, tags, recurrence);
-      setText('');
-      setPriority('medium');
-      setDueDate('');
-      setRemindersEnabled(true);
-      setTags([]);
-      setRecurrence('none');
+      setText(''); setPriority('medium'); setDueDate('');
+      setRemindersEnabled(true); setTags([]); setRecurrence('none');
     } finally { setLoading(false); }
   };
 
+  const priorityChipClass = (p) => {
+    const base = 'px-3 py-1 rounded-md text-xs font-semibold cursor-pointer transition-all duration-200 border';
+    if (priority === p) {
+      if (p === 'high')   return `${base} bg-[rgba(224,82,82,0.15)] text-[#e05252] border-[#e05252]`;
+      if (p === 'medium') return `${base} bg-[rgba(217,119,6,0.15)] text-[#d97706] border-[#d97706]`;
+      return `${base} bg-[rgba(46,204,113,0.15)] text-[#2ecc71] border-[#2ecc71]`;
+    }
+    return `${base} bg-transparent text-text3 border-border hover:border-border2`;
+  };
+
   return (
-    <form className="compose" onSubmit={submit}>
-      <div className="compose-row">
+    <form
+      className="bg-surface border border-border rounded-xl mb-6 overflow-hidden transition-all duration-200 focus-within:border-border2 focus-within:shadow-[0_0_0_1px_rgba(46,61,50,0.8)]"
+      onSubmit={submit}
+    >
+      {/* Main input row */}
+      <div className="flex items-center gap-3 px-4 py-3">
         <input
           ref={inputRef}
           id="task-input"
-          className="compose-input"
+          className="flex-1 bg-transparent text-text text-sm outline-none placeholder:text-text3 min-w-0"
           placeholder="What needs to get done?"
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -74,94 +79,113 @@ export default function ComposeTodo({ onAdd }) {
         <button
           id="btn-add-task"
           type="submit"
-          className="compose-add-btn"
           disabled={loading || !text.trim()}
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold cursor-pointer text-sm px-4 py-2 transition-all duration-200 bg-accent text-[#0a1a10] border border-accent shadow-[0_4px_12px_rgba(231,76,60,0.25)] hover:-translate-y-0.5 hover:bg-accent2 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none whitespace-nowrap"
         >
-          {loading ? <span className="spinner" style={{ width:14, height:14, borderWidth:2 }} /> : (
-            <>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="12" y1="4" x2="12" y2="20"/><line x1="4" y1="12" x2="20" y2="12"/>
-              </svg>
-              Add task
-            </>
-          )}
+          {loading
+            ? <span className="spinner w-3.5 h-3.5 border-2" />
+            : <>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="12" y1="4" x2="12" y2="20"/><line x1="4" y1="12" x2="20" y2="12"/>
+                </svg>
+                Add task
+              </>
+          }
         </button>
       </div>
 
-      {/* Tags Row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1.125rem', flexWrap: 'wrap' }}>
+      {/* Tags row */}
+      <div className="flex items-center gap-2 px-4 py-1.5 flex-wrap border-t border-border/40">
         {tags.map(t => (
-          <span key={t} style={{ background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <span key={t} className="flex items-center gap-1 bg-surface2 text-text border border-border rounded-full px-2 py-0.5 text-xs">
             #{t}
-            <button type="button" onClick={() => removeTag(t)} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', padding: 0, fontSize: '0.9rem' }}>&times;</button>
+            <button
+              type="button"
+              onClick={() => removeTag(t)}
+              className="bg-none border-none text-text3 cursor-pointer p-0 text-sm leading-none hover:text-text"
+            >
+              &times;
+            </button>
           </span>
         ))}
-        <input 
-          type="text" 
+        <input
+          type="text"
           value={tagInput}
           onChange={(e) => setTagInput(e.target.value)}
           onKeyDown={handleTagKeyDown}
-          placeholder="Add a tag (press Enter)"
-          style={{ fontSize: '0.8rem', padding: '0.2rem 0.5rem', border: 'none', background: 'transparent', outline: 'none', color: 'var(--text)' }}
+          placeholder="Add a tag…"
+          className="text-xs bg-transparent outline-none border-none text-text placeholder:text-text3 min-w-[100px]"
         />
       </div>
 
-      <div className="compose-footer">
-        <div style={{ display:'flex', alignItems:'center', gap:'0' }}>
-          <span className="priority-label">Priority</span>
-          <div className="priority-chips">
-            {['high','medium','low'].map((p) => (
+      {/* Footer row */}
+      <div className="flex items-center gap-4 px-4 py-2.5 border-t border-border/40 flex-wrap">
+        {/* Priority chips */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-text3 font-medium">Priority</span>
+          <div className="flex gap-1">
+            {['high','medium','low'].map(p => (
               <button
-                key={p} type="button"
+                key={p}
+                type="button"
                 id={`p-${p}`}
-                className={`p-chip${priority === p ? ` sel-${p}` : ''}`}
                 onClick={() => setPriority(p)}
+                className={priorityChipClass(p)}
               >
                 {p.charAt(0).toUpperCase() + p.slice(1)}
               </button>
             ))}
           </div>
         </div>
-        
-        <div style={{ display:'flex', alignItems:'center', gap:'1rem', paddingLeft: '1rem', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className="priority-label">Due</span>
-            <input 
-              type="datetime-local" 
-              value={dueDate} 
-              onChange={(e) => setDueDate(e.target.value)} 
-              style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', outline: 'none' }}
-            />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <input 
-              type="checkbox" 
-              id="reminders-check-compose"
-              checked={remindersEnabled} 
-              onChange={(e) => setRemindersEnabled(e.target.checked)}
-              disabled={!dueDate}
-              style={{ cursor: dueDate ? 'pointer' : 'not-allowed', accentColor: 'var(--accent)' }}
-            />
-            <label htmlFor="reminders-check-compose" style={{ fontSize: '0.8rem', color: dueDate ? 'var(--text)' : 'var(--text3)', cursor: dueDate ? 'pointer' : 'not-allowed' }}>
-              Reminders
-            </label>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem' }}>
-            <span className="priority-label">Recurrence</span>
-            <select
-              value={recurrence}
-              onChange={(e) => setRecurrence(e.target.value)}
-              style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', background: 'var(--surface2)', color: 'var(--text)', outline: 'none' }}
-            >
-              <option value="none">None</option>
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-            </select>
-          </div>
+
+        {/* Due date */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-text3 font-medium">Due</span>
+          <input
+            type="datetime-local"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            className="text-xs px-2.5 py-1.5 rounded-md border border-border bg-surface2 text-text outline-none focus:border-accent transition-colors duration-200"
+          />
         </div>
 
-        <span className="compose-hint" style={{ marginLeft: 'auto' }}><kbd>Enter</kbd> to add</span>
+        {/* Reminders */}
+        <div className="flex items-center gap-1.5">
+          <input
+            type="checkbox"
+            id="reminders-check-compose"
+            checked={remindersEnabled}
+            onChange={(e) => setRemindersEnabled(e.target.checked)}
+            disabled={!dueDate}
+            className="accent-accent cursor-pointer disabled:cursor-not-allowed"
+          />
+          <label
+            htmlFor="reminders-check-compose"
+            className={`text-xs ${dueDate ? 'text-text cursor-pointer' : 'text-text3 cursor-not-allowed'}`}
+          >
+            Reminders
+          </label>
+        </div>
+
+        {/* Recurrence */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-text3 font-medium">Recurrence</span>
+          <select
+            value={recurrence}
+            onChange={(e) => setRecurrence(e.target.value)}
+            className="text-xs px-2.5 py-1.5 rounded-md border border-border bg-surface2 text-text outline-none focus:border-accent transition-colors duration-200"
+          >
+            <option value="none">None</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+
+        {/* Hint */}
+        <span className="ml-auto text-[0.7rem] text-text3 hidden sm:block">
+          <kbd className="px-1.5 py-0.5 bg-surface2 border border-border rounded text-text2 font-mono text-[0.65rem]">Enter</kbd> to add
+        </span>
       </div>
     </form>
   );

@@ -16,9 +16,9 @@ const ListIcon = () => (
 export default function TodoList({ todos, loading, filter, onToggle, onDelete, onUpdate, onTaskClick }) {
   if (loading) {
     return (
-      <div className="state-center">
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
         <div className="spinner" />
-        <span className="state-sub">Loading your tasks...</span>
+        <span className="text-sm text-text3">Loading your tasks...</span>
       </div>
     );
   }
@@ -26,16 +26,16 @@ export default function TodoList({ todos, loading, filter, onToggle, onDelete, o
   if (!todos.length) {
     const { label, sub } = EMPTY[filter] || EMPTY.All;
     return (
-      <div className="state-center">
-        <div className="state-icon"><ListIcon /></div>
-        <p className="state-label">{label}</p>
-        <p className="state-sub">{sub}</p>
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <div className="text-text3 opacity-40 mb-1"><ListIcon /></div>
+        <p className="text-base font-semibold text-text2">{label}</p>
+        <p className="text-sm text-text3">{sub}</p>
       </div>
     );
   }
 
   return (
-    <div className="task-grid" role="list">
+    <div className="grid grid-cols-1 gap-3" role="list">
       {todos.map((t) => (
         <TodoItem
           key={t._id}

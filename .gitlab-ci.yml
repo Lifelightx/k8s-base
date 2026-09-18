@@ -18,8 +18,6 @@ lint-backend:
   - cd backend
   - npm install
   - npm run lint
-  rules:
-  - if: $CI_PIPELINE_SOURCE == "web"
 security-audit-backend:
   stage: security
   image: node:22-alpine
@@ -27,8 +25,6 @@ security-audit-backend:
   - cd backend
   - npm audit --audit-level=critical
   allow_failure: true
-  rules:
-  - if: $CI_PIPELINE_SOURCE == "web"
 test-backend:
   stage: test
   image: node:22-alpine
@@ -37,8 +33,6 @@ test-backend:
   - cd backend
   - npm install
   - npm run test
-  rules:
-  - if: $CI_PIPELINE_SOURCE == "web"
 build-frontend:
   stage: build
   image: docker:latest
@@ -50,8 +44,6 @@ build-frontend:
   - docker save $FRONTEND_IMAGE | docker exec -i minikube docker load
   - echo "Cleaning up dangling images to save space..."
   - docker exec -i minikube docker image prune -f
-  rules:
-  - if: $CI_PIPELINE_SOURCE == "web"
 build-backend:
   stage: build
   image: docker:latest
@@ -63,8 +55,6 @@ build-backend:
   - docker save $BACKEND_IMAGE | docker exec -i minikube docker load
   - echo "Cleaning up dangling images to save space..."
   - docker exec -i minikube docker image prune -f
-  rules:
-  - if: $CI_PIPELINE_SOURCE == "web"
 build-auth:
   stage: build
   image: docker:latest
@@ -76,8 +66,6 @@ build-auth:
   - docker save $AUTH_IMAGE | docker exec -i minikube docker load
   - echo "Cleaning up dangling image to save space..."
   - docker exec -i minikube docker image prune -f
-  rules:
-  - if: $CI_PIPELINE_SOURCE == "web"
 build-gateway:
   stage: build
   image: docker:latest
@@ -88,8 +76,6 @@ build-gateway:
   - echo "Loading image into Minikube"
   - docker save $GATEWAY_IMAGE | docker exec -i minikube docker load
   - echo "Cleaning up -i minikube docker image prune -f"
-  rules:
-  - if: $CI_PIPELINE_SOURCE == "web"
 build-llm:
   stage: build
   image: docker:latest
@@ -101,8 +87,6 @@ build-llm:
   - docker save $LLM_IMAGE | docker exec -i minikube docker load
   - echo "Cleaning up dangling images to save space..."
   - docker exec -i minikube docker image prune -f
-  rules:
-  - if: $CI_PIPELINE_SOURCE == "web"
 deploy-all:
   stage: deploy
   image: docker:latest
@@ -118,8 +102,6 @@ deploy-all:
     --kubeconfig /var/lib/minikube/kubeconfig --set frontend.image.tag=$CI_COMMIT_SHORT_SHA
     --set backend.image.tag=$CI_COMMIT_SHORT_SHA --set auth.image.tag=$CI_COMMIT_SHORT_SHA
     --set gateway.image.tag=$CI_COMMIT_SHORT_SHA --set llm.image.tag=$CI_COMMIT_SHORT_SHA"
-  rules:
-  - if: $CI_PIPELINE_SOURCE == "web"
 smoke-test-all:
   stage: smoke-test
   image: docker:latest
@@ -127,5 +109,3 @@ smoke-test-all:
   - echo "Testing if all services are live.."
   - 'docker exec minikube curl -f -H "Host: todo.app.com" http://localhost/api/health
     || exit 1'
-  rules:
-  - if: $CI_PIPELINE_SOURCE == "web"

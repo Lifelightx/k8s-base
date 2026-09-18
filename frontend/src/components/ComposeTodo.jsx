@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import CustomDatePicker from './CustomDatePicker';
+import CustomSelect from './CustomSelect';
 
 export default function ComposeTodo({ onAdd }) {
   const [text, setText]         = useState('');
@@ -141,11 +143,9 @@ export default function ComposeTodo({ onAdd }) {
         {/* Due date */}
         <div className="flex items-center gap-2">
           <span className="text-xs text-text3 font-medium">Due</span>
-          <input
-            type="datetime-local"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className="text-xs px-2.5 py-1.5 rounded-md border border-border bg-surface2 text-text outline-none focus:border-accent transition-colors duration-200"
+          <CustomDatePicker
+            selected={dueDate ? new Date(dueDate) : null}
+            onChange={(date) => setDueDate(date ? date.toISOString() : '')}
           />
         </div>
 
@@ -170,16 +170,16 @@ export default function ComposeTodo({ onAdd }) {
         {/* Recurrence */}
         <div className="flex items-center gap-2">
           <span className="text-xs text-text3 font-medium">Recurrence</span>
-          <select
+          <CustomSelect
             value={recurrence}
-            onChange={(e) => setRecurrence(e.target.value)}
-            className="text-xs px-2.5 py-1.5 rounded-md border border-border bg-surface2 text-text outline-none focus:border-accent transition-colors duration-200"
-          >
-            <option value="none">None</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
+            onChange={setRecurrence}
+            options={[
+              { value: 'none', label: 'None' },
+              { value: 'daily', label: 'Daily' },
+              { value: 'weekly', label: 'Weekly' },
+              { value: 'monthly', label: 'Monthly' }
+            ]}
+          />
         </div>
 
         {/* Hint */}

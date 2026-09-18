@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { planTaskWithAI } from '../services/api';
 import { updateTodo } from '../services/api';
+import CustomDatePicker from './CustomDatePicker';
 
 const P_COLORS = {
   high:   { bg: 'rgba(224,82,82,0.12)',  border: '#e05252', text: '#e05252', label: 'High' },
@@ -163,12 +164,10 @@ export default function TaskDetailsPage({ todo, onBack, onUpdate, onToggle, onDe
           <div className="td-field">
             <label className="td-field-label">Due Date & Reminders</label>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '0.25rem' }}>
-              <input 
-                type="datetime-local" 
-                value={editDueDate} 
-                onChange={(e) => setEditDueDate(e.target.value)} 
+              <CustomDatePicker
+                selected={editDueDate ? new Date(editDueDate) : null}
+                onChange={(date) => setEditDueDate(date ? date.toISOString().slice(0, 16) : '')}
                 className="td-title-input"
-                style={{ width: 'auto', padding: '0.4rem 0.6rem', minHeight: 'unset', fontSize: '0.9rem' }}
               />
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: editDueDate ? 'pointer' : 'not-allowed', color: editDueDate ? '#374151' : '#9ca3af', fontSize: '0.9rem' }}>
                 <input 

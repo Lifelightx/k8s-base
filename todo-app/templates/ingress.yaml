@@ -43,6 +43,14 @@ spec:
                 name: todo-frontend
                 port:
                   number: 80
-                  
+          
+          - path: /monitor
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-grafana
+                port:
+                  number: 80
+
 
 

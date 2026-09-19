@@ -8,14 +8,16 @@ const { createClient } = require('redis');
 const { rateLimit } = require('express-rate-limit');
 const { RedisStore } = require('rate-limit-redis');
 
+const logger = require('./logger');
+const pinoHttp = require('pino-http')({ logger });
 
 //create redis client 
 const redisClient = createClient({
     url: process.env.REDIS_URL
 });
 
-redisClient.on('error', (err)=> console.error('Redis client error: ', err));
-redisClient.connect().then(()=> console.log('Gateway connected to Redis for rate limiting'))
+redisClient.on('error', (err)=> logger.error({ err }, 'Redis client error'));
+redisClient.connect().then(()=> logger.info('Gateway connected to Redis for rate limiting'))
 
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -28,6 +30,7 @@ const globalLimiter = rateLimit({
     message: { error: 'Too many requests from this IP, please try again after 15 minutes.'}
 })
 const app = express();
+app.use(pinoHttp);
 const PORT = process.env.PORT || 5000;
 app.use(globalLimiter)
 app.use(cors({
@@ -107,5 +110,5 @@ server.on('upgrade', (req, socket, head) => {
 });
 
 server.listen(PORT, () => {
-    console.log(`Gateway service listening on port ${PORT}`);
+    logger.info(`Gateway service listening on port ${PORT}`);
 });

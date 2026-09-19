@@ -4,7 +4,11 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const authRoutes = require('./routes/auth');
 const errorHandler = require('./middlewares/errorHandler');
+const logger = require('./logger');
+const pinoHttp = require('pino-http')({ logger });
+
 const app = express();
+app.use(pinoHttp);
 
 app.use(cors({
     origin: true, // or specific frontend URL in production

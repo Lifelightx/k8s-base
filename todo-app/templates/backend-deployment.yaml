@@ -46,6 +46,12 @@ spec:
                 configMapKeyRef:
                   name: todo-config
                   key: REDIS_URL
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: tood-config
+                  key: NODE_ENV
+            
           startupProbe:
             httpGet:
               path: /api/health

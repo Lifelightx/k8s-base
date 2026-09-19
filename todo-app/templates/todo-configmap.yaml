@@ -12,3 +12,4 @@ data:
   OLLAMA_HOST: "http://host.minikube.internal:11434"
   REDIS_URL: "redis://todo-redis:6379"
   VAPID_PUBLIC_KEY: "BCyq2R8yo0oTEQ_CHFdEyYLzs1SDY2bcR4KdmoiN0TYbwKXR83MM0HYPtVNit2N86ntP4rJNhjTJI3y-yyMndac"
+  NODE_ENV: "production"

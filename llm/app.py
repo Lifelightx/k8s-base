@@ -8,9 +8,16 @@ import httpx
 # pyrefly: ignore [missing-import]
 from fastapi import FastAPI, HTTPException, APIRouter
 
-# pyrefly: ignore [missing-import]
+import logging
 from pydantic import BaseModel
 load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="AI Todo List", version="1.0.0")
 
 router = APIRouter(prefix="/api/ai")
@@ -36,7 +43,7 @@ def health_check():
 @router.post("/generate")
 async def generate_description(todo: TodoRequest):
     prompt = f"Generate a concise, 2-sentence actionable description for the todo task: {todo.title}, Respond with only the description in string format and dont add quotes. "
-    print(OLLAMA_HOST)
+    logger.info(f"Generating description for: {todo.title} using {OLLAMA_HOST}")
     try:
         async with httpx.AsyncClient(timeout=None) as client:
             response = await client.post(
@@ -55,7 +62,7 @@ async def generate_description(todo: TodoRequest):
             return {"description": data.get("response", "").strip()}
 
     except httpx.HTTPError as e:
-        print(f"Error calling LLM provider: {e}")
+        logger.error(f"Error calling LLM provider: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to LLM Model service")
 
 @router.post("/plan")
@@ -77,7 +84,7 @@ async def generate_plan(plan: PlanRequest):
             return {"plan": data.get("response ", "").strip()}
 
     except httpx.HTTPError as e:
-        print(f"Error calling LLM provider: {e}")
+        logger.error(f"Error calling LLM provider: {e}")
         raise HTTPException(status_code=500, detail="Failed to connect to LLM Model service")
 
 @router.post("/prioritize")
@@ -133,7 +140,7 @@ Todos:
                     
             return {"suggestions": suggestions}
     except Exception as e:
-        print(f"Error calling LLM provider: {e}")
+        logger.error(f"Error calling LLM provider: {e}")
         raise HTTPException(status_code=500, detail="Failed to prioritize")
 
 app.include_router(router)

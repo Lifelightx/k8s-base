@@ -35,6 +35,11 @@ spec:
               secretKeyRef:
                 name: todo-secret
                 key: JWT_SECRETE
+          - name: NODE_ENV
+            valueFrom:
+              configMapKeyRef:
+                name: tood-config
+                key: NODE_ENV
         startupProbe:
           httpGet:
             path: /api/health

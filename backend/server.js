@@ -4,7 +4,7 @@ const { initQueueWorker } =  require('./src/services/queue.service');
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const morgan = require('morgan');
+const pinoHttp = require('pino-http');
 const connectDB = require('./src/config/db');
 const todoRoutes = require('./src/routes/todos');
 const errorHandler = require('./src/middleware/errorHandler');
@@ -37,11 +37,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.use(
-  morgan(':method :url :status :res[content-length] - :response-time ms', {
-    stream: { write: (msg) => logger.info(msg.trim()) },
-  })
-);
+app.use(pinoHttp({ logger }));
 
 // Routes
 app.use('/api/todos', todoRoutes);
@@ -52,17 +48,17 @@ app.use('/api/projects', projectRoutes);
 
 
 app.get("/api/crash", (req, res) => {
-  console.log("Intentional crash request", {
+  logger.info({
     pod: os.hostname(),
-  })
+  }, "Intentional crash request")
 
-  console.log("CRASH REQUEST", {
+  logger.info({
     pod: os.hostname(),
     method: req.method,
     url: req.originalUrl,
     userAgent: req.headers["user-agent"],
     forwardedFor: req.headers["x-forwarded-for"],
-  });
+  }, "CRASH REQUEST");
 
   res.status(200).json({
     message: "This pod will crash",

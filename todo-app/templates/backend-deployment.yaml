@@ -91,6 +91,8 @@ kind: Service
 
 metadata:
   name: todo-backend
+  labels:
+    app: todo-backend
 
 spec:
   selector:

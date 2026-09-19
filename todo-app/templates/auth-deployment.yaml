@@ -74,6 +74,8 @@ kind: Service
 
 metadata:
   name: todo-auth
+  labels:
+    app: todo-auth
 
 spec:
   selector:

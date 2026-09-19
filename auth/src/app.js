@@ -6,8 +6,11 @@ const authRoutes = require('./routes/auth');
 const errorHandler = require('./middlewares/errorHandler');
 const logger = require('./logger');
 const pinoHttp = require('pino-http')({ logger });
+const promBundle = require("express-prom-bundle");
+const metricsMiddleware = promBundle({includeMethod: true, includePath: true});
 
 const app = express();
+app.use(metricsMiddleware);
 app.use(pinoHttp);
 
 app.use(cors({

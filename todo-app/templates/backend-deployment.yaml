@@ -22,7 +22,8 @@ spec:
           image: {{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
           ports:
-            - containerPort: 5001
+            - name: http
+              containerPort: 5001
           env: 
             - name: PORT
               value: "5001"
@@ -84,8 +85,18 @@ spec:
               memory: 512Mi
 
 
-              
-            
+---
+apiVersion: v1
+kind: Service
 
-          
-  
+metadata:
+  name: todo-backend
+
+spec:
+  selector:
+    app: todo-backend
+  ports:
+    - name: http
+      port: 5001
+      targetPort: 5001
+  type: ClusterIP

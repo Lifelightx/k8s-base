@@ -5,8 +5,8 @@ import os
 from dotenv import load_dotenv 
 # pyrefly: ignore [missing-import]
 import httpx
-# pyrefly: ignore [missing-import]
 from fastapi import FastAPI, HTTPException, APIRouter
+from prometheus_fastapi_instrumentator import Instrumentator
 
 import logging
 from pydantic import BaseModel
@@ -19,6 +19,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="AI Todo List", version="1.0.0")
+
+Instrumentator().instrument(app).expose(app)
 
 router = APIRouter(prefix="/api/ai")
 

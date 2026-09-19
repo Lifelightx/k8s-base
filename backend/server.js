@@ -5,6 +5,8 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const pinoHttp = require('pino-http');
+const promBundle = require("express-prom-bundle");
+const metricsMiddleware = promBundle({includeMethod: true, includePath: true});
 const connectDB = require('./src/config/db');
 const todoRoutes = require('./src/routes/todos');
 const errorHandler = require('./src/middleware/errorHandler');
@@ -38,6 +40,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use(pinoHttp({ logger }));
+app.use(metricsMiddleware);
 
 // Routes
 app.use('/api/todos', todoRoutes);

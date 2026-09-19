@@ -79,7 +79,8 @@ spec:
   selector:
     app: todo-auth
   ports:
-    - port: 5002
+    - name: http
+      port: 5002
       targetPort: 5002
   type: ClusterIP
 

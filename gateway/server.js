@@ -10,6 +10,8 @@ const { RedisStore } = require('rate-limit-redis');
 
 const logger = require('./logger');
 const pinoHttp = require('pino-http')({ logger });
+const promBundle = require("express-prom-bundle");
+const metricsMiddleware = promBundle({includeMethod: true, includePath: true});
 
 //create redis client 
 const redisClient = createClient({
@@ -30,6 +32,7 @@ const globalLimiter = rateLimit({
     message: { error: 'Too many requests from this IP, please try again after 15 minutes.'}
 })
 const app = express();
+app.use(metricsMiddleware);
 app.use(pinoHttp);
 const PORT = process.env.PORT || 5000;
 app.use(globalLimiter)
